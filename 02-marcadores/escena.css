@@ -1,0 +1,71 @@
+/* El fondo va SOLO en <html>: AR.js pone el video con z-index negativo,
+   y un fondo en <body> se pintaría encima del video. */
+html { background: #000; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  color: #eef1f6;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+/* AR.js agrega su propio <video> y el lienzo 3D detrás de nuestro HUD */
+.hud-arriba, .hud-abajo {
+  position: fixed;
+  left: 0; right: 0;
+  z-index: 10;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  pointer-events: none;
+}
+.hud-arriba {
+  top: 0;
+  padding-top: calc(env(safe-area-inset-top) + 10px);
+  justify-content: space-between;
+  background: linear-gradient(#000b, transparent);
+}
+.hud-abajo {
+  bottom: 0;
+  flex-direction: column;
+  padding-bottom: calc(env(safe-area-inset-bottom) + 14px);
+  background: linear-gradient(transparent, #000b);
+}
+.hud-arriba a, .hud-abajo a { pointer-events: auto; }
+
+.volver { color: #8fb3ff; text-decoration: none; font-size: 14px; }
+
+.chips { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.chip {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #ffffff22;
+  color: #ffffffaa;
+  transition: background .2s, color .2s;
+}
+.chip.visto { background: #3ddc84; color: #0b0d12; }
+
+#info {
+  margin: 0;
+  font-size: 13px;
+  text-align: center;
+  text-shadow: 0 1px 3px #000;
+  font-variant-numeric: tabular-nums;
+}
+
+.btn {
+  display: inline-block;
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: #ffffff26;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}

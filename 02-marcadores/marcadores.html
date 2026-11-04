@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AR · Nivel 2 · Marcadores para imprimir</title>
+  <link rel="stylesheet" href="./marcadores.css" />
+</head>
+<body>
+  <main>
+    <nav class="no-imprimir"><a href="./">← Volver a la cámara AR</a></nav>
+    <h1>Marcadores</h1>
+    <p class="no-imprimir">
+      Imprímelos (de 6 a 15 cm de lado funciona bien) o muéstralos en la pantalla de otro dispositivo.
+      Respeta el <strong>margen blanco</strong>: AR.js necesita ver el borde negro completo.
+    </p>
+
+    <section class="rejilla">
+      <figure>
+        <img src="./marcadores/hiro.png" alt="Marcador Hiro" />
+        <figcaption><strong>Hiro</strong> · el cohete</figcaption>
+      </figure>
+      <figure>
+        <img src="./marcadores/estrella.svg" alt="Marcador Estrella" />
+        <figcaption><strong>Estrella</strong> · el cubo de colores</figcaption>
+      </figure>
+      <figure>
+        <img src="./marcadores/escalera.svg" alt="Marcador Escalera" />
+        <figcaption><strong>Escalera</strong> · ejes y medidas</figcaption>
+      </figure>
+    </section>
+
+    <button class="btn no-imprimir" onclick="print()">Imprimir</button>
+
+    <section class="generador no-imprimir">
+      <h2>Crea tu propio marcador</h2>
+      <p>
+        Sube un dibujo (mejor si es simple, con mucho contraste y que <strong>no se vea igual al girarlo</strong>).
+        Te damos la imagen para imprimir y el archivo <code>.patt</code> que entiende AR.js.
+        Ambos se generan aquí mismo, con nuestro propio código: tu imagen no sale de tu dispositivo.
+      </p>
+      <label class="btn">
+        Elegir imagen
+        <input id="entrada" type="file" accept="image/*" hidden />
+      </label>
+
+      <div id="resultado" class="resultado" hidden>
+        <canvas id="vista-marcador" width="1024" height="1024"></canvas>
+        <div>
+          <p>Así lo "ve" AR.js (16 × 16):</p>
+          <canvas id="vista-16" width="16" height="16"></canvas>
+          <p id="aviso-simetria" class="aviso" hidden>
+            Tu imagen se ve casi igual al girarla 90°. AR.js podría confundir su orientación.
+          </p>
+          <div class="botones">
+            <a id="bajar-png" class="btn" download>Descargar marcador (.png)</a>
+            <a id="bajar-patt" class="btn" download>Descargar patrón (.patt)</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="./marcadores.js"></script>
+</body>
+</html>

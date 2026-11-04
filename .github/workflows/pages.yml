@@ -32,7 +32,7 @@ jobs:
             dir="${dir%/}"
             [ -f "$dir/package.json" ] || continue
             echo "Construyendo $dir"
-            (cd "$dir" && npm ci && npx vite build --outDir "../_site/$dir" --emptyOutDir)
+            (cd "$dir" && npm ci && npm run build -- --outDir "../_site/$dir" --emptyOutDir)
           done
       - uses: actions/upload-pages-artifact@v4
         with:
