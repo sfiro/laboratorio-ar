@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>AR · Nivel 1 · Objeto en tu espacio</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <header class="barra">
+    <a class="volver" href="../">← Laboratorio</a>
+    <span class="titulo">Nivel 1 · Objeto en tu espacio</span>
+  </header>
+
+  <!--
+    model-viewer hace casi todo por nosotros:
+    - camera-controls: girar y hacer zoom con los dedos
+    - ar: muestra el botón para verlo en tu espacio
+    - ar-modes: WebXR (Android/Chrome) → Scene Viewer (Android) → Quick Look (iPhone)
+    - ar-scale="fixed": respeta el tamaño real del modelo (en metros)
+  -->
+  <model-viewer
+    id="visor"
+    src="./cohete.glb"
+    alt="Un cohete sobre su plataforma de lanzamiento"
+    camera-controls
+    touch-action="pan-y"
+    autoplay
+    animation-name="Flotar"
+    shadow-intensity="1"
+    shadow-softness="0.8"
+    exposure="1.1"
+    camera-orbit="30deg 70deg 1.6m"
+    ar
+    ar-modes="webxr scene-viewer quick-look"
+    ar-scale="fixed"
+    ar-placement="floor"
+  >
+    <!-- Etiquetas pegadas a partes del modelo (posición en metros) -->
+    <button class="etiqueta" slot="hotspot-ventana" data-position="0m 0.36m 0.09m" data-normal="0 0 1">Ventana</button>
+    <button class="etiqueta" slot="hotspot-aleta" data-position="0.13m 0.17m -0.075m" data-normal="0.87 0 -0.5">Aleta</button>
+    <button class="etiqueta" slot="hotspot-base" data-position="-0.17m 0.02m 0m" data-normal="-1 0 0">Plataforma</button>
+
+    <button slot="ar-button" class="btn btn-ar">Ver en tu espacio</button>
+
+    <div slot="progress-bar" class="progreso"><div id="barra-progreso"></div></div>
+  </model-viewer>
+
+  <section class="panel">
+    <p id="aviso-ar" class="aviso" hidden>
+      Este dispositivo no puede mostrar AR. Abre la página en tu celular para poner el cohete en tu cuarto.
+    </p>
+
+    <div id="grupo-colores" class="fila">
+      <span class="etiqueta-fila">Color</span>
+      <button class="color activo" data-color="#ebedf2" style="--c:#ebedf2" aria-label="Blanco"></button>
+      <button class="color" data-color="#2b2f3a" style="--c:#2b2f3a" aria-label="Negro"></button>
+      <button class="color" data-color="#f2c230" style="--c:#f2c230" aria-label="Amarillo"></button>
+      <button class="color" data-color="#4fe3c1" style="--c:#4fe3c1" aria-label="Turquesa"></button>
+      <button class="color" data-color="#b48cff" style="--c:#b48cff" aria-label="Morado"></button>
+    </div>
+
+    <div class="fila">
+      <button id="btnAnimacion" class="btn btn-sec">Pausar animación</button>
+      <button id="btnEtiquetas" class="btn btn-sec">Ocultar etiquetas</button>
+      <label class="btn btn-sec subir">
+        Subir tu .glb
+        <input id="archivo" type="file" accept=".glb,model/gltf-binary" hidden />
+      </label>
+    </div>
+  </section>
+
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

@@ -1,0 +1,111 @@
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: radial-gradient(ellipse at 50% 30%, #1d2433, #0b0d12 70%);
+  color: #eef1f6;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+body { display: flex; flex-direction: column; overflow: hidden; }
+
+.barra {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: calc(env(safe-area-inset-top) + 10px) 16px 10px;
+  font-size: 14px;
+}
+.titulo { font-weight: 600; }
+.volver { color: #8fb3ff; text-decoration: none; }
+
+model-viewer {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  --poster-color: transparent;
+}
+
+.progreso {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+#barra-progreso { height: 100%; width: 0; background: #4f8cff; transition: width .2s; }
+
+/* Etiquetas sobre el modelo */
+.etiqueta {
+  border: 0;
+  border-radius: 999px;
+  padding: 5px 10px;
+  font: 600 12px system-ui, sans-serif;
+  color: #0b0d12;
+  background: #ffffffe6;
+  box-shadow: 0 2px 8px #0006;
+  transform: translate(8px, -50%);
+  white-space: nowrap;
+  transition: opacity .3s;
+}
+/* model-viewer atenúa solo las etiquetas que quedan detrás del modelo */
+model-viewer { --min-hotspot-opacity: 0.2; }
+.sin-etiquetas .etiqueta { display: none; }
+
+.btn {
+  appearance: none;
+  border: 0;
+  border-radius: 999px;
+  padding: 12px 18px;
+  font: inherit;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+}
+.btn-ar {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  background: #4f8cff;
+  box-shadow: 0 6px 20px #4f8cff55;
+}
+.btn-sec {
+  flex: 1;
+  padding: 10px 8px;
+  font-size: 13px;
+  background: #ffffff1a;
+  text-align: center;
+}
+
+.panel {
+  display: grid;
+  gap: 12px;
+  padding: 12px 16px calc(env(safe-area-inset-bottom) + 16px);
+  max-width: 560px;
+  width: 100%;
+  margin: 0 auto;
+}
+.fila { display: flex; gap: 8px; align-items: center; }
+.etiqueta-fila { font-size: 13px; color: #8b94a7; margin-right: 4px; }
+
+.color {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid #ffffff33;
+  background: var(--c);
+  cursor: pointer;
+  padding: 0;
+}
+.color.activo { border-color: #fff; box-shadow: 0 0 0 3px #4f8cff; }
+
+.aviso {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #161a23;
+  color: #b4bccb;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+[hidden] { display: none !important; }
