@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>AR · Nivel 0 · Taller</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <!-- Capa 1: la cámara (el "mundo real") -->
+  <video id="video" playsinline muted autoplay></video>
+  <!-- Capa 2: lo virtual, dibujado encima de la cámara -->
+  <canvas id="lienzo"></canvas>
+
+  <header class="barra">
+    <span class="titulo">Nivel 0 · Taller</span>
+    <span id="fps" class="fps">— fps</span>
+  </header>
+
+  <main id="inicio" class="panel">
+    <h1>Tu celular, listo para AR</h1>
+    <p>Primero revisamos qué puede hacer este dispositivo y después encendemos la cámara.</p>
+    <ul id="diagnostico" class="diagnostico"></ul>
+    <button id="btnIniciar" class="btn">Encender cámara</button>
+    <p id="error" class="error" hidden></p>
+  </main>
+
+  <footer id="controles" class="controles" hidden>
+    <button id="btnGirar" class="btn btn-sec">Cambiar cámara</button>
+    <button id="btnSensores" class="btn btn-sec">Activar giroscopio</button>
+    <button id="btnInfo" class="btn btn-sec">Diagnóstico</button>
+  </footer>
+
+  <script type="module" src="./main.js"></script>
+</body>
+</html>
