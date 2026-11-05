@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>AR · Nivel 5 · Manos</title>
+  <link rel="stylesheet" href="./estilos.css" />
+</head>
+<body>
+  <div id="ar" class="ar"></div>
+
+  <header class="hud-arriba">
+    <a class="volver" href="../">← Laboratorio</a>
+    <span id="estado" class="chip">Sin manos</span>
+  </header>
+
+  <main id="inicio" class="panel">
+    <h1>Tus manos en la pantalla</h1>
+    <p>
+      La cámara encuentra <strong>21 puntos</strong> en cada mano (hasta dos manos) y nosotros
+      calculamos el resto: el <strong>pellizco</strong>, qué dedos están estirados, los gestos y qué tan rápido te mueves.
+    </p>
+    <ul class="lista">
+      <li><strong>Lanzar</strong>: pellizca un objeto para agarrarlo y suéltalo en movimiento para lanzarlo.</li>
+      <li><strong>Pintar</strong>: dibuja con luz en el aire pellizcando.</li>
+      <li><strong>Burbujas</strong>: un juego de 30 segundos. Revienta todas las que puedas.</li>
+      <li><strong>Gestos</strong>: lo que ve la computadora: ✊ 🖐️ ✌️ ☝️ 🤘 👍</li>
+    </ul>
+    <div class="botones-inicio">
+      <button id="btnTrasera" class="btn">Cámara trasera</button>
+      <button id="btnFrontal" class="btn btn-sec">Cámara frontal</button>
+    </div>
+    <p class="nota">
+      <strong>Trasera</strong>: sostén el celular con una mano y usa la otra frente a la cámara.<br />
+      <strong>Frontal</strong>: apoya el celular (contra un libro, por ejemplo) y usa las dos manos, como en un espejo.<br />
+      Todo se procesa en tu celular. Tu imagen no se envía a ningún lado.
+    </p>
+    <p id="mensaje" class="mensaje" hidden></p>
+  </main>
+
+  <div id="panel" class="panel-datos" hidden></div>
+
+  <footer id="controles" class="hud-abajo" hidden>
+    <p id="ayuda"></p>
+    <div class="filtros" id="experiencias"></div>
+    <div class="acciones">
+      <button id="btnSalir" class="btn btn-sec">Salir</button>
+      <button id="btnReiniciar" class="btn btn-sec">↺ Reiniciar</button>
+      <button id="btnCamara" class="btn btn-sec">Cambiar cámara</button>
+    </div>
+  </footer>
+
+  <script type="module" src="./main.js"></script>
+</body>
+</html>
