@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AR · Nivel 3 · Pósters</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 24px 16px 48px; background: #0b0d12; color: #eef1f6; font-family: system-ui, -apple-system, sans-serif; }
+    main { max-width: 1000px; margin: 0 auto; }
+    a { color: #8fb3ff; }
+    nav a { text-decoration: none; font-size: 14px; }
+    h1 { font-size: 26px; margin: 16px 0 6px; }
+    p { color: #b4bccb; line-height: 1.5; }
+    figure { margin: 24px 0; }
+    figure img { display: block; width: 100%; height: auto; border-radius: 6px; }
+    figcaption { margin-top: 8px; color: #b4bccb; font-size: 14px; }
+    .btn { display: inline-block; border: 0; border-radius: 999px; padding: 11px 18px; font: inherit; font-size: 14px; font-weight: 600; background: #4f8cff; color: #fff; text-decoration: none; cursor: pointer; }
+    @media print {
+      @page { size: landscape; margin: 1cm; }
+      body { background: #fff; padding: 0; }
+      .no-imprimir { display: none !important; }
+      figure { page-break-after: always; margin: 0; }
+      figure img { border-radius: 0; }
+      figcaption { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <nav class="no-imprimir"><a href="./">← Volver a la cámara AR</a></nav>
+    <h1 class="no-imprimir">Pósters</h1>
+    <p class="no-imprimir">
+      Muéstralos en pantalla completa en la computadora o imprímelos en horizontal.
+      Mientras más grandes, mejor: el celular necesita ver los detalles.
+    </p>
+    <button class="btn no-imprimir" onclick="print()">Imprimir</button>
+
+    <figure>
+      <img src="./objetivos/cohete.png" alt="Póster Cohete: un planeta con anillo, una luna y un cohete en el espacio" />
+      <figcaption><strong>Cohete</strong>: el planeta, la luna y el cohete salen del papel</figcaption>
+    </figure>
+    <figure>
+      <img src="./objetivos/portal.png" alt="Póster Portal: un muro de ladrillos de colores con una ventana" />
+      <figcaption><strong>Portal</strong>: a través de la ventana hay un mundo dentro del papel</figcaption>
+    </figure>
+  </main>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>AR · Nivel 3 · Imágenes que cobran vida</title>
+  <link rel="stylesheet" href="./estilos.css" />
+</head>
+<body>
+  <!-- Aquí van el video de la cámara y el lienzo 3D -->
+  <div id="ar" class="ar"></div>
+
+  <header class="hud-arriba">
+    <a class="volver" href="../">← Laboratorio</a>
+    <span id="estado-objetivo" class="chip">Buscando…</span>
+  </header>
+
+  <main id="inicio" class="panel">
+    <h1>Imágenes que cobran vida</h1>
+    <p>Apunta el celular a una imagen y sale contenido 3D de ella. Puedes usar nuestros pósters o tu propia foto.</p>
+
+    <section class="opcion">
+      <h2>Pósters del laboratorio</h2>
+      <p>
+        Abre los <a href="./posters.html" target="_blank">pósters</a> en la pantalla de la computadora o imprímelos.
+        <strong>Cohete</strong>: el planeta y el cohete salen del papel.
+        <strong>Portal</strong>: mira a través de la ventana hacia otro mundo.
+      </p>
+      <button id="btnPosters" class="btn">Empezar con los pósters</button>
+    </section>
+
+    <section class="opcion">
+      <h2>Tu propia imagen</h2>
+      <p>
+        Elige una foto con muchos detalles (una portada de libro, un cuadro, una caja de cereal).
+        La "compilamos" aquí mismo, en tu celular. Después apunta a la imagen real o a la foto en otra pantalla.
+      </p>
+      <label class="btn btn-sec">
+        Elegir imagen
+        <input id="archivo" type="file" accept="image/*" hidden />
+      </label>
+      <div id="compilando" class="compilando" hidden>
+        <img id="miniatura" alt="Tu imagen" />
+        <div>
+          <p id="texto-compilando">Compilando…</p>
+          <div class="barra"><div id="progreso"></div></div>
+        </div>
+      </div>
+    </section>
+
+    <p id="mensaje" class="mensaje" hidden></p>
+  </main>
+
+  <footer id="controles" class="hud-abajo" hidden>
+    <p id="ayuda">Apunta a un póster</p>
+    <button id="btnSalir" class="btn btn-sec">Salir</button>
+  </footer>
+
+  <script type="module" src="./main.js"></script>
+</body>
+</html>
