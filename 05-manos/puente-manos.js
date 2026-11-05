@@ -118,7 +118,8 @@ export class RealidadDeManos {
         ultimoTiempoVideo = this.video.currentTime;
         const ms = performance.now();
         // Solo en desarrollo: manos sintéticas para probar sin cámara (ver README)
-        const falsas = import.meta.env.DEV && window.__manosDePrueba?.(ms / 1000);
+        // (ojo: con `DEV && …` en producción quedaría `false`, y `false ?? detectar` NO detecta)
+        const falsas = import.meta.env.DEV ? window.__manosDePrueba?.(ms / 1000) : null;
         this.#actualizarManos(falsas ?? this.detector.detectForVideo(this.video, ms), ms / 1000);
       }
       const t = reloj.getElapsed(), dt = Math.min(reloj.getDelta(), 0.1);
