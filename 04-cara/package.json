@@ -1,0 +1,23 @@
+{
+  "name": "ar-04-cara",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "vendor": "node scripts/copiar-vendor.mjs",
+    "predev": "npm run vendor",
+    "prebuild": "npm run vendor",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@mediapipe/tasks-vision": "^1.1.1",
+    "three": "^0.183.2"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-basic-ssl": "^2.3.0",
+    "qrcode-terminal": "^0.12.0",
+    "vite": "^8.3.5"
+  }
+}

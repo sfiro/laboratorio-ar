@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>AR · Nivel 4 · Filtros de cara</title>
+  <link rel="stylesheet" href="./estilos.css" />
+</head>
+<body>
+  <div id="ar" class="ar"></div>
+
+  <header class="hud-arriba">
+    <a class="volver" href="../">← Laboratorio</a>
+    <span id="estado" class="chip">Sin cara</span>
+  </header>
+
+  <main id="inicio" class="panel">
+    <h1>Filtros de cara</h1>
+    <p>
+      Como los de las redes sociales, pero hechos por nosotros. La cámara frontal encuentra
+      <strong>478 puntos</strong> de tu cara y reconoce <strong>52 gestos</strong> en cada cuadro.
+    </p>
+    <ul class="lista">
+      <li><strong>Fiesta</strong>: gafas y gorro. Abre la boca para lanzar confeti.</li>
+      <li><strong>Neón</strong>: tu cara hecha de luz. Parpadea para cambiar de color.</li>
+      <li><strong>Dragón</strong>: cuernos, y fuego cuando abres la boca.</li>
+      <li><strong>Datos</strong>: lo que ve la computadora: puntos, ejes y gestos.</li>
+    </ul>
+    <p class="nota">Todo se procesa en tu celular. Tu imagen no se envía a ningún lado.</p>
+    <button id="btnIniciar" class="btn">Encender cámara frontal</button>
+    <p id="mensaje" class="mensaje" hidden></p>
+  </main>
+
+  <div id="panel-datos" class="panel-datos" hidden></div>
+
+  <footer id="controles" class="hud-abajo" hidden>
+    <p id="ayuda"></p>
+    <div class="filtros" id="filtros"></div>
+    <div class="acciones">
+      <button id="btnSalir" class="btn btn-sec">Salir</button>
+      <button id="btnFoto" class="btn btn-foto" aria-label="Tomar foto"></button>
+      <span class="hueco"></span>
+    </div>
+  </footer>
+
+  <div id="vista-foto" class="vista-foto" hidden>
+    <img id="foto" alt="Tu foto con el filtro" />
+    <div class="acciones-foto">
+      <button id="btnCerrarFoto" class="btn btn-sec">Cerrar</button>
+      <a id="btnGuardar" class="btn" download="filtro-ar.png">Guardar</a>
+      <button id="btnCompartir" class="btn" hidden>Compartir</button>
+    </div>
+  </div>
+
+  <script type="module" src="./main.js"></script>
+</body>
+</html>
