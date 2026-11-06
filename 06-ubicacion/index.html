@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>AR · Nivel 6 · Por ubicación</title>
+  <link rel="stylesheet" href="./estilos.css" />
+</head>
+<body>
+  <div id="ar" class="ar"></div>
+
+  <header class="hud-arriba">
+    <a class="volver" href="../">← Laboratorio</a>
+    <span class="chips">
+      <span id="chipGps" class="chip">GPS…</span>
+      <span id="chipRumbo" class="chip">🧭 —</span>
+    </span>
+  </header>
+
+  <main id="inicio" class="panel">
+    <h1>AR por ubicación</h1>
+    <p>
+      Aquí no hay que apuntar a nada: el <strong>GPS</strong> dice dónde estás y la <strong>brújula</strong>
+      hacia dónde miras. Con eso ponemos cosas en lugares reales del mundo.
+    </p>
+    <ul class="lista">
+      <li><strong>Tesoros</strong>: escondemos 3 tesoros a tu alrededor. Camina hasta ellos.</li>
+      <li><strong>Lugares</strong>: los negocios, parques y escuelas que tienes cerca, en la dirección en que están.</li>
+      <li><strong>Cielo</strong>: los puntos cardinales, el Sol y la Luna, aunque estén bajo el horizonte.</li>
+      <li><strong>Marcas</strong>: deja una marca donde estás (tu carro, por ejemplo) y encuéntrala después.</li>
+    </ul>
+    <p class="nota">Funciona mejor <strong>al aire libre</strong>: dentro de un edificio el GPS se equivoca por decenas de metros.</p>
+    <div class="botones-inicio">
+      <button id="btnIniciar" class="btn">Empezar</button>
+      <button id="btnSimular" class="btn btn-sec">Probar sin salir (simulación)</button>
+    </div>
+    <p class="nota">
+      Pide permiso para la cámara, la ubicación y el movimiento. Todo se calcula en tu celular;
+      tu ubicación solo sale si tocas «Buscar lugares» (y redondeada).
+    </p>
+    <p id="mensaje" class="mensaje" hidden></p>
+  </main>
+
+  <div id="panel" class="panel-datos" hidden></div>
+  <canvas id="radar" class="radar" hidden></canvas>
+
+  <div id="controlesSim" class="controles-sim" hidden>
+    <button data-sim="izq" aria-label="Girar a la izquierda">◀</button>
+    <button data-sim="adelante" aria-label="Caminar">▲</button>
+    <button data-sim="der" aria-label="Girar a la derecha">▶</button>
+    <button data-sim="atras" aria-label="Retroceder">▼</button>
+  </div>
+
+  <footer id="controles" class="hud-abajo" hidden>
+    <p id="ayuda"></p>
+    <div class="filtros" id="modos"></div>
+    <div class="acciones" id="acciones">
+      <button id="btnSalir" class="btn btn-sec">Salir</button>
+      <span id="botonesModo" class="botones-modo"></span>
+    </div>
+  </footer>
+
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

@@ -66,7 +66,7 @@ con WebXR en Android y con model-viewer/Quick Look en iPhone. Diseñaremos con e
 - Pasamos de A-Frame a Three.js puro.
 - **Aprendes:** landmarks de la mano, detección de gestos, Three.js a fondo.
 
-### Nivel 6 — AR por ubicación (AR.js location-based)
+### Nivel 6 — AR por ubicación (motor propio: GPS + brújula + Three.js)
 - Puntos de interés en el mapa de tu barrio que aparecen al mirar con el celular.
 - **Aprendes:** GPS, brújula/giroscopio (`DeviceOrientation`), límites de precisión.
 

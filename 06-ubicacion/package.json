@@ -1,0 +1,19 @@
+{
+  "name": "ar-06-ubicacion",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "three": "^0.183.2"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-basic-ssl": "^2.3.0",
+    "qrcode-terminal": "^0.12.0",
+    "vite": "~8.3.5"
+  }
+}
