@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>AR · Nivel 7 · Tu espacio</title>
+  <link rel="stylesheet" href="./estilos.css" />
+</head>
+<body>
+  <div id="ar" class="ar"></div>
+
+  <main id="inicio" class="panel">
+    <a class="volver" href="../">← Laboratorio</a>
+    <h1>Objetos en tu espacio</h1>
+    <p>
+      Aquí el celular <strong>entiende tu cuarto</strong>: sabe dónde está el piso y las mesas, y
+      cómo te mueves. Los objetos se quedan en su lugar aunque camines alrededor de ellos.
+    </p>
+    <ul class="lista">
+      <li><strong>Colocar</strong>: una planta, una lámpara, una silla, un robot que te mira y un cohete, a tamaño real.</li>
+      <li><strong>Medir</strong>: una cinta métrica para medir lo que sea.</li>
+      <li><strong>Pelotas</strong>: lánzalas y rebotan en tu piso de verdad. Pon una canasta y encesta.</li>
+    </ul>
+
+    <section id="conAR" class="caja" hidden>
+      <p>✅ Tu celular tiene <strong>WebXR</strong>.</p>
+      <button id="btnAR" class="btn">Entrar en AR</button>
+    </section>
+
+    <section id="conQuickLook" class="caja" hidden>
+      <p>
+        Tu iPhone no tiene WebXR, pero sí <strong>AR Quick Look</strong>. Toca un objeto para ponerlo en tu cuarto
+        (lo convertimos al formato de Apple en este momento). Con dos dedos lo giras y lo cambias de tamaño.
+      </p>
+      <div id="galeria" class="galeria"></div>
+      <p class="nota">Para medir, tu iPhone ya trae la app <strong>Medidas</strong>.</p>
+    </section>
+
+    <section id="sinAR" class="caja" hidden>
+      <p id="sinARtexto"></p>
+    </section>
+
+    <button id="btnSimular" class="btn btn-sec">Vista previa en un cuarto simulado</button>
+    <p class="nota">WebXR para AR funciona en Chrome para Android con ARCore (la mayoría de los Android recientes).</p>
+    <p id="mensaje" class="mensaje" hidden></p>
+  </main>
+
+  <!-- En AR, esta capa se muestra sobre la cámara ("dom-overlay") -->
+  <div id="overlay" class="overlay" hidden>
+    <header class="hud hud-arriba">
+      <button id="btnSalir" class="btn btn-sec">✕ Salir</button>
+      <span id="estado" class="chip">Buscando superficies…</span>
+    </header>
+    <div id="panel" class="hud panel-datos"></div>
+    <footer class="hud hud-abajo">
+      <p id="ayuda"></p>
+      <div class="filtros paleta" id="paleta"></div>
+      <div class="acciones" id="botones"></div>
+      <div class="filtros" id="modos"></div>
+    </footer>
+  </div>
+
+  <script type="module" src="./main.js"></script>
+</body>
+</html>
