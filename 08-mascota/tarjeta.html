@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tarjeta de la mascota</title>
+  <style>
+    :root { color-scheme: light; }
+    body { margin: 0; font: 15px system-ui, sans-serif; background: #f2f4f7; color: #1b1f2a; }
+    main { max-width: 900px; margin: 0 auto; padding: 20px 16px 40px; }
+    img { display: block; width: 100%; height: auto; border-radius: 6px; box-shadow: 0 4px 20px #0002; }
+    .botones { display: flex; gap: 8px; flex-wrap: wrap; margin: 14px 0; }
+    button, a.btn { font: inherit; font-weight: 600; padding: 10px 16px; border-radius: 999px; border: 0; background: #4f8cff; color: #fff; text-decoration: none; cursor: pointer; }
+    ul { line-height: 1.6; }
+    body.pantalla { background: #000; }
+    body.pantalla main { max-width: none; padding: 0; height: 100vh; display: grid; place-items: center; }
+    body.pantalla img { max-height: 100vh; width: auto; max-width: 100vw; border-radius: 0; }
+    body.pantalla .texto { display: none; }
+    @media print {
+      body { background: #fff; }
+      .texto { display: none; }
+      main { padding: 0; }
+      img { box-shadow: none; width: 15cm; margin: 1cm auto; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="texto">
+      <h1>La casa de tu mascota</h1>
+      <div class="botones">
+        <button id="imprimir">🖨️ Imprimir</button>
+        <button id="pantalla">🖥️ Mostrar en grande</button>
+        <a class="btn" href="./">← Volver</a>
+      </div>
+    </div>
+    <img src="./objetivos/casa.png" alt="Tarjeta: un jardín con flores, piedras, una casita y un estanque" />
+    <div class="texto">
+      <ul>
+        <li><strong>Impresa</strong>: de 10 a 20 cm de ancho, en papel mate (el brillo confunde a la cámara). Ponla sobre la mesa.</li>
+        <li><strong>En otra pantalla</strong>: abre esta página en la computadora o en una tableta, toca «Mostrar en grande» y apunta el celular.</li>
+        <li>Con buena luz y sin doblarla, la cámara la encuentra más rápido.</li>
+      </ul>
+    </div>
+  </main>
+  <script>
+    document.getElementById('imprimir').onclick = () => print();
+    document.getElementById('pantalla').onclick = () => {
+      document.body.classList.add('pantalla');
+      document.documentElement.requestFullscreen?.().catch(() => {});
+    };
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') document.body.classList.remove('pantalla'); });
+    document.querySelector('img').onclick = () => document.body.classList.remove('pantalla');
+  </script>
+</body>
+</html>

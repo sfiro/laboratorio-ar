@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>AR · Nivel 8 · Tu mascota</title>
+  <link rel="stylesheet" href="./estilos.css" />
+</head>
+<body>
+  <div id="ar" class="ar"></div>
+
+  <main id="inicio" class="panel">
+    <a class="volver" href="../">← Laboratorio</a>
+    <h1>Tu mascota en realidad aumentada</h1>
+
+    <!-- Antes de nacer -->
+    <section id="nacer" hidden>
+      <p>
+        Una criatura vive sobre una <strong>tarjeta</strong>: la alimentas, juegas con ella, la acuestas a dormir…
+        y si no la visitas, le da hambre. También se sube a tu cabeza para tomarse selfies contigo.
+      </p>
+      <label class="campo">¿Cómo se va a llamar?
+        <input id="nombre" maxlength="14" placeholder="Por ejemplo: Lumi" autocomplete="off" />
+      </label>
+      <div class="campo">Color
+        <div id="colores" class="colores"></div>
+      </div>
+      <button id="btnNacer" class="btn">🥚 ¡Que nazca!</button>
+    </section>
+
+    <!-- Ya nació -->
+    <section id="visitar" hidden>
+      <div class="ficha">
+        <div id="fichaNombre" class="ficha-nombre"></div>
+        <div id="fichaEdad" class="tenue"></div>
+        <div id="fichaBarras" class="barras"></div>
+      </div>
+      <button id="btnCasa" class="btn">🏠 Visitar su casa</button>
+      <button id="btnSelfie" class="btn btn-sec">🤳 Selfie juntos</button>
+      <p class="nota">
+        Para visitarla necesitas su <strong>tarjeta</strong>:
+        <a href="./tarjeta.html" target="_blank">imprímela o ábrela en otra pantalla</a>.
+        También puedes <label class="enlace">usar cualquier imagen como casa<input id="archivo" type="file" accept="image/*" hidden /></label>
+        <span id="casaPropia" hidden> (ahora vive en tu imagen · <a href="#" id="btnCasaOriginal">volver a la tarjeta</a>)</span>.
+      </p>
+      <div id="compilando" class="compilando" hidden>
+        <span id="textoCompilando">Preparando tu imagen…</span>
+        <div class="barra"><div id="progreso"></div></div>
+      </div>
+      <p class="nota peligro"><a href="#" id="btnOlvidar">Empezar con otra mascota</a></p>
+    </section>
+
+    <p id="mensaje" class="mensaje" hidden></p>
+  </main>
+
+  <header id="hudArriba" class="hud-arriba" hidden>
+    <button id="btnSalir" class="btn btn-sec">✕</button>
+    <span class="chips">
+      <span id="chipNombre" class="chip"></span>
+      <span id="estado" class="chip">Busca la tarjeta</span>
+    </span>
+  </header>
+  <div id="barras" class="panel-datos barras" hidden></div>
+
+  <footer id="controles" class="hud-abajo" hidden>
+    <p id="ayuda"></p>
+    <div class="acciones">
+      <button id="btnComer" class="btn btn-sec accion-casa">🍎 Comer</button>
+      <button id="btnJugar" class="btn btn-sec accion-casa">🎾 Jugar</button>
+      <button id="btnDormir" class="btn btn-sec">💤 Dormir</button>
+      <button id="btnFoto" class="btn btn-sec accion-selfie">📸 Foto</button>
+      <button id="btnCambiar" class="btn btn-sec"></button>
+    </div>
+  </footer>
+
+  <div id="vista-foto" class="vista-foto" hidden>
+    <img id="foto" alt="Tu foto con tu mascota" />
+    <div class="acciones-foto">
+      <button id="btnCerrarFoto" class="btn btn-sec">Cerrar</button>
+      <a id="btnGuardar" class="btn" download="mascota-ar.png">Guardar</a>
+      <button id="btnCompartir" class="btn" hidden>Compartir</button>
+    </div>
+  </div>
+
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

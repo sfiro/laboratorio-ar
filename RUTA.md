@@ -75,7 +75,7 @@ con WebXR en Android y con model-viewer/Quick Look en iPhone. Diseñaremos con e
 - **Fallback para iPhone:** detectar el dispositivo y mandarlo a Quick Look (nivel 1).
 - **Aprendes:** SLAM, anchors, hit-testing, estimación de luz, diseño multiplataforma.
 
-### Nivel 8 — Un proyecto completo
+### Nivel 8 — Un proyecto completo (hecho: mascota virtual)
 Combinar lo anterior en algo publicable. Ideas:
 - **Juego:** mini-juego de puntería o mascota virtual con física (cannon-es / Rapier).
 - **Museo/escuela:** carteles que explican con animaciones 3D.
