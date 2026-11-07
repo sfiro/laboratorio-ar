@@ -156,3 +156,8 @@ body.en-ar { overflow: hidden; }
 .acciones-editor { display: flex; gap: 8px; flex-wrap: wrap; }
 .peligro { color: #ffb4c0; }
 .editor > #btnProbar { justify-self: start; }
+
+.ajustes small { font-size: 12px; color: #8a93a5; }
+.subcaja { display: grid; gap: 12px; padding: 10px; border-left: 3px solid #ffd166; background: #ffffff08; border-radius: 0 10px 10px 0; }
+.ajustes, .ajustes label, .subcaja { min-width: 0; }
+.ajustes select { width: 100%; min-width: 0; text-overflow: ellipsis; }

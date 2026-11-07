@@ -57,8 +57,12 @@ Pon **tus propios modelos** sobre los marcadores, desde el celular y sin tocar c
 - **Se guarda solo en ese celular** (IndexedDB del navegador). No se sube a ningún servidor; en otro celular hay que elegirlos de nuevo.
 - Cada modelo se **normaliza**: se centra, se apoya en el papel y su lado más grande mide 0.8 del marcador. Así da igual si lo hiciste en milímetros o en metros.
 - Si el modelo trae **animaciones**, se elige cuál se reproduce. Si no, puede girar, flotar o quedarse quieto.
+- **Orientación**:
+  - **«¿Qué eje del modelo va hacia arriba?»** corrige los modelos que salen acostados o de cabeza. Cada programa usa su convención: glTF usa Y arriba; Blender y los `.stl`, Z arriba.
+  - **Girar, inclinar adelante e inclinar a los lados** dejan el objeto en la pose fija que quieras.
+- **Giro animado**: eliges el **eje** (vertical, horizontal de lado a lado, horizontal de adelante a atrás, o el propio eje del objeto inclinado) y la **velocidad**; los valores negativos giran al revés. El giro es sobre el **centro** del objeto, y en la vista previa una **flecha amarilla** muestra el eje.
 - Para que vaya fluido en el celular: menos de **100 000 triángulos** y texturas de 2048 px como máximo. Con más de 300 000 te avisa.
-- Modelos de prueba en `pruebas/modelos/`: un `.glb` animado, una torre `.stl` acostada y un dado `.obj` + `.mtl`.
+- Modelos de prueba en `pruebas/modelos/`: un `.glb` animado, una torre `.stl` con Z arriba y un dado `.obj` + `.mtl`.
 
 **¿Dónde consigo modelos?** Hazlos con **Blender** (libre) y exporta a glTF Binary (`.glb`). O descárgalos con licencia libre (CC0 o CC-BY) de Poly Haven, Kenney o Sketchfab (filtro «Downloadable»), dando el crédito que pida la licencia.
 

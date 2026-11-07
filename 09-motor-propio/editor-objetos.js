@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import {
-  ACEPTAR, AJUSTES_INICIALES, guardarObjeto, borrarObjeto, leerObjetos, registroDesdeArchivos,
+  ACEPTAR, AJUSTES_INICIALES, LADOS_ARRIBA, EJES_GIRO, completarAjustes, guardarObjeto, borrarObjeto, leerObjetos, registroDesdeArchivos,
   cargarModelo, montar, ambienteDeHabitacion, pedirGuardadoPermanente,
 } from './mis-objetos.js';
 import { NOMBRES_DE_FABRICA } from './contenido.js';
@@ -78,6 +78,7 @@ async function mostrarActual() {
     const leido = await cargarModelo(r);
     if (actual?.registro !== r) return; // cambiaste de marcador mientras cargaba
     actual.montado = montar(leido, r.ajustes);
+    actual.montado.mostrarEje(true);
     vista.soporte.add(actual.montado.objeto);
     llenarAjustes(r.ajustes, leido.clips);
     const avisos = [];
@@ -113,32 +114,45 @@ function quitarDeVista() {
   actual.montado = null;
 }
 
-// Los controles de tamaño, giro, altura, acostado y animación
-function llenarAjustes(a, clips) {
-  $('ajTamano').value = a.tamano; $('ajGiro').value = a.giro; $('ajAltura').value = a.altura; $('ajAcostado').checked = a.acostado;
+// Los controles: tamaño, altura, qué lado va arriba, giro, inclinaciones y movimiento
+const DESLIZADORES = ['ajTamano', 'ajAltura', 'ajGiro', 'ajInclinarX', 'ajInclinarZ', 'ajVelocidad'];
+const opcion = (sel, valor, texto) => sel.append(Object.assign(document.createElement('option'), { value: valor, textContent: texto }));
+
+function llenarAjustes(ajustes, clips) {
+  const a = completarAjustes(ajustes);
+  $('ajTamano').value = a.tamano; $('ajAltura').value = a.altura; $('ajGiro').value = a.giro;
+  $('ajInclinarX').value = a.inclinarX; $('ajInclinarZ').value = a.inclinarZ; $('ajVelocidad').value = a.velocidad;
+  $('ajArriba').value = a.arriba; $('ajEje').value = a.eje;
   const sel = $('ajAnimacion');
   sel.innerHTML = '';
-  const opcion = (valor, texto) => sel.append(Object.assign(document.createElement('option'), { value: valor, textContent: texto }));
-  opcion('auto', clips.length ? 'Automática (la del modelo)' : 'Automática (girar)');
-  clips.forEach((c, i) => opcion(`clip:${i}`, `Del modelo: ${c.name || `animación ${i + 1}`}`));
-  opcion('girar', 'Girar'); opcion('flotar', 'Flotar'); opcion('ninguna', 'Quieto');
+  opcion(sel, 'auto', clips.length ? 'Automática (la del modelo)' : 'Automática (girar)');
+  clips.forEach((c, i) => opcion(sel, `clip:${i}`, `Del modelo: ${c.name || `animación ${i + 1}`}`));
+  opcion(sel, 'girar', 'Girar'); opcion(sel, 'flotar', 'Flotar'); opcion(sel, 'ninguna', 'Quieto');
   sel.value = a.animacion === 'clip' ? `clip:${a.clip}` : a.animacion;
   if (!sel.value) sel.value = 'auto';
+  actual.tieneClips = clips.length > 0;
   mostrarValores();
 }
 
 function leerAjustes() {
   const anim = $('ajAnimacion').value;
   return {
-    tamano: +$('ajTamano').value, giro: +$('ajGiro').value, altura: +$('ajAltura').value, acostado: $('ajAcostado').checked,
+    tamano: +$('ajTamano').value, altura: +$('ajAltura').value, arriba: $('ajArriba').value,
+    giro: +$('ajGiro').value, inclinarX: +$('ajInclinarX').value, inclinarZ: +$('ajInclinarZ').value,
     animacion: anim.startsWith('clip:') ? 'clip' : anim, clip: anim.startsWith('clip:') ? +anim.slice(5) : 0,
+    eje: $('ajEje').value, velocidad: +$('ajVelocidad').value,
   };
 }
 
 function mostrarValores() {
   $('vTamano').textContent = `${(+$('ajTamano').value).toFixed(2)}×`;
-  $('vGiro').textContent = `${$('ajGiro').value}°`;
   $('vAltura').textContent = (+$('ajAltura').value).toFixed(2);
+  for (const k of ['Giro', 'InclinarX', 'InclinarZ']) $(`v${k}`).textContent = `${$(`aj${k}`).value}°`;
+  const v = +$('ajVelocidad').value;
+  $('vVelocidad').textContent = v ? `${Math.abs((v * 60) / (2 * Math.PI)).toFixed(1)} vueltas/min ${v > 0 ? '↺' : '↻'}` : 'quieto';
+  // El eje y la velocidad solo importan si el objeto gira
+  const anim = $('ajAnimacion').value;
+  $('cajaGiro').hidden = !(anim === 'girar' || (anim === 'auto' && !actual?.tieneClips));
 }
 
 let guardando = null;
@@ -227,7 +241,15 @@ export function prepararMisObjetos({ alProbar }) {
   $('btnVolverLista').addEventListener('click', () => { cerrarEditor(); refrescarLista(); });
   $('archivoModelo').accept = ACEPTAR;
   $('archivoModelo').addEventListener('change', (e) => { alElegirArchivos(e.target.files); e.target.value = ''; });
-  for (const id of ['ajTamano', 'ajGiro', 'ajAltura', 'ajAcostado', 'ajAnimacion']) $(id).addEventListener('input', alCambiarAjuste);
+  for (const [valor, { texto }] of Object.entries(LADOS_ARRIBA)) opcion($('ajArriba'), valor, texto);
+  for (const [valor, { texto }] of Object.entries(EJES_GIRO)) opcion($('ajEje'), valor, texto);
+  for (const id of [...DESLIZADORES, 'ajArriba', 'ajAnimacion', 'ajEje']) $(id).addEventListener('input', alCambiarAjuste);
+  // Tocar dos veces un deslizador lo devuelve a su valor inicial
+  for (const id of DESLIZADORES) $(id).addEventListener('dblclick', (e) => {
+    const clave = { ajTamano: 'tamano', ajAltura: 'altura', ajGiro: 'giro', ajInclinarX: 'inclinarX', ajInclinarZ: 'inclinarZ', ajVelocidad: 'velocidad' }[id];
+    e.target.value = AJUSTES_INICIALES[clave];
+    alCambiarAjuste();
+  });
   $('btnReiniciar').addEventListener('click', () => {
     if (!actual?.registro) return;
     llenarAjustes(AJUSTES_INICIALES, []);

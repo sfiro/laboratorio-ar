@@ -19,7 +19,38 @@ import dracoWasm from 'three/examples/jsm/libs/draco/gltf/draco_decoder.wasm?url
 
 export const FORMATOS = ['glb', 'gltf', 'obj', 'stl', 'ply', 'fbx'];
 export const ACEPTAR = '.glb,.gltf,.obj,.mtl,.stl,.ply,.fbx,.bin,.png,.jpg,.jpeg,.webp,.ktx2,.tga';
-export const AJUSTES_INICIALES = { tamano: 1, giro: 0, altura: 0, acostado: false, animacion: 'auto', clip: 0 };
+export const AJUSTES_INICIALES = {
+  tamano: 1, altura: 0,
+  arriba: '+Y',                       // qué eje del modelo apunta hacia arriba
+  giro: 0, inclinarX: 0, inclinarZ: 0, // orientación fija, en grados
+  animacion: 'auto', clip: 0,
+  eje: 'vertical', velocidad: 0.6,    // giro animado: sobre qué eje y cuántos radianes por segundo
+};
+
+/** Cómo girar el modelo para que ese eje suyo quede hacia arriba */
+export const LADOS_ARRIBA = {
+  '+Y': { texto: 'Y (lo normal en .glb)', giro: [0, 0, 0] },
+  '+Z': { texto: 'Z (típico de .stl)', giro: [-Math.PI / 2, 0, 0] },
+  '-Z': { texto: '−Z', giro: [Math.PI / 2, 0, 0] },
+  '+X': { texto: 'X', giro: [0, 0, Math.PI / 2] },
+  '-X': { texto: '−X', giro: [0, 0, -Math.PI / 2] },
+  '-Y': { texto: '−Y (está de cabeza)', giro: [Math.PI, 0, 0] },
+};
+/** Ejes del giro animado, vistos sobre el marcador */
+export const EJES_GIRO = {
+  vertical: { texto: 'Vertical (como un trompo)', eje: new THREE.Vector3(0, 1, 0) },
+  lado: { texto: 'Horizontal, de lado a lado', eje: new THREE.Vector3(1, 0, 0) },
+  frente: { texto: 'Horizontal, de adelante a atrás', eje: new THREE.Vector3(0, 0, 1) },
+  propio: { texto: 'Su propio eje (sigue la inclinación)', eje: null },
+};
+
+/** Los ajustes guardados con versiones anteriores ("acostado") se pasan al formato nuevo */
+export function completarAjustes(a = {}) {
+  const r = { ...AJUSTES_INICIALES, ...a };
+  if (!a.arriba && a.acostado) r.arriba = '+Z';
+  delete r.acostado;
+  return r;
+}
 
 const extension = (nombre) => nombre.split('.').pop().toLowerCase();
 const nombreBase = (ruta) => decodeURIComponent(ruta.split(/[\\/]/).pop().split('?')[0]).toLowerCase();
@@ -60,7 +91,7 @@ export function registroDesdeArchivos(id, lista) {
   if (!principal) throw new Error(`No encontré un modelo. Elige un archivo ${FORMATOS.map((f) => '.' + f).join(', ')}.`);
   // El modelo principal va primero
   archivos.sort((a, b) => (a === principal ? -1 : b === principal ? 1 : 0));
-  return { id, nombre: principal.nombre.replace(/\.[^.]+$/, ''), archivos, ajustes: { ...AJUSTES_INICIALES } };
+  return { id, nombre: principal.nombre.replace(/\.[^.]+$/, ''), archivos, ajustes: completarAjustes() };
 }
 
 // ───────────────────────── Leer el modelo ─────────────────────────
@@ -135,42 +166,57 @@ const materialSimple = (conColores = false) => new THREE.MeshStandardMaterial({
  * Devuelve { objeto, aplicar(ajustes), animar(t, dt) }: aplicar() cambia los ajustes al instante.
  */
 export function montar({ modelo, clips }, ajustesIniciales) {
-  const raiz = new THREE.Group();      // tamaño, giro y altura
-  const acostar = new THREE.Group();   // muchos .stl y .obj vienen con Z hacia arriba
-  const centrar = new THREE.Group();   // centrado y escala base
-  centrar.add(modelo);
-  acostar.add(centrar);
-  raiz.add(acostar);
+  // Cadena de grupos (de afuera hacia adentro):
+  //   raiz      → tamaño y altura sobre el papel
+  //   pivote    → el giro animado; está a media altura del modelo, para que gire sobre su centro
+  //   orientar  → giro e inclinaciones fijas que elegiste
+  //   bajar     → deshace la media altura del pivote (el modelo vuelve a apoyarse en el papel)
+  //   arriba    → pone hacia arriba el eje del modelo que elegiste
+  //   centrar   → centra el modelo y lo escala a 0.8 del marcador
+  const raiz = new THREE.Group(), pivote = new THREE.Group(), orientar = new THREE.Group();
+  const bajar = new THREE.Group(), arriba = new THREE.Group(), centrar = new THREE.Group();
+  raiz.add(pivote); pivote.add(orientar); orientar.add(bajar); bajar.add(arriba); arriba.add(centrar); centrar.add(modelo);
+  // Flecha amarilla con el eje del giro (solo en la vista previa). Va en el pivote: al girar
+  // sobre su propio eje, la flecha no se mueve.
+  const flecha = new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), new THREE.Vector3(), 1, '#ffd166', 0.1, 0.06);
+  flecha.visible = false;
+  flecha.traverse((o) => { if (o.material) { o.material.depthTest = false; o.renderOrder = 20; } });
+  pivote.add(flecha);
+  let verEje = false;
 
   const caja = new THREE.Box3(), tam = new THREE.Vector3(), centro = new THREE.Vector3();
-  let mezclador = null, accion = null, ajustes = null, acostadoAntes = null;
+  let mezclador = null, accion = null, ajustes = null, arribaAntes = null, mitad = 0.4;
   if (clips.length) mezclador = new THREE.AnimationMixer(modelo);
 
   function normalizar() {
-    // Medimos el modelo ya acostado (o no) para apoyarlo en el papel
     centrar.position.set(0, 0, 0); centrar.scale.setScalar(1);
-    raiz.updateWorldMatrix(true, true);
-    // La caja, medida en las coordenadas de "raiz" (sin importar dónde esté puesto)
-    caja.setFromObject(acostar, true).applyMatrix4(new THREE.Matrix4().copy(raiz.matrixWorld).invert());
+    bajar.updateWorldMatrix(true, true);
+    // La caja, medida en las coordenadas de "bajar" (sin importar dónde esté puesto)
+    caja.setFromObject(arriba, true).applyMatrix4(new THREE.Matrix4().copy(bajar.matrixWorld).invert());
     if (caja.isEmpty()) return;
     caja.getSize(tam);
     const base = 0.8 / Math.max(tam.x, tam.y, tam.z, 1e-6);
     caja.getCenter(centro);
     centrar.scale.setScalar(base);
-    // En coordenadas de "acostar": llevar el centro a X=Z=0 y la base a Y=0
+    // Llevar el centro a X = Z = 0 y la base a Y = 0 (en coordenadas de "bajar"),
+    // y pasarlo a las coordenadas de "arriba", que está girado
     const desplazamiento = new THREE.Vector3(-centro.x, -caja.min.y, -centro.z);
-    acostar.updateMatrixWorld(true);
-    const inv = new THREE.Matrix4().copy(acostar.matrix).invert();
-    desplazamiento.applyMatrix4(new THREE.Matrix4().extractRotation(inv));
+    desplazamiento.applyMatrix4(new THREE.Matrix4().extractRotation(arriba.matrix).invert());
     centrar.position.copy(desplazamiento.multiplyScalar(base));
+    mitad = (tam.y * base) / 2;
+    pivote.position.y = mitad;
+    bajar.position.y = -mitad;
   }
 
+  const rad = THREE.MathUtils.degToRad;
   function aplicar(nuevos) {
-    ajustes = { ...AJUSTES_INICIALES, ...nuevos };
-    acostar.rotation.x = ajustes.acostado ? -Math.PI / 2 : 0;
-    if (acostadoAntes !== ajustes.acostado) { normalizar(); acostadoAntes = ajustes.acostado; }
+    ajustes = completarAjustes(nuevos);
+    arriba.rotation.set(...(LADOS_ARRIBA[ajustes.arriba] ?? LADOS_ARRIBA['+Y']).giro);
+    if (arribaAntes !== ajustes.arriba) { normalizar(); arribaAntes = ajustes.arriba; }
     raiz.scale.setScalar(ajustes.tamano);
-    raiz.rotation.y = THREE.MathUtils.degToRad(ajustes.giro);
+    // Primero el giro (alrededor de la vertical), luego las inclinaciones
+    orientar.rotation.set(rad(ajustes.inclinarX), rad(ajustes.giro), rad(ajustes.inclinarZ), 'YXZ');
+    pivote.quaternion.identity();
     raiz.position.y = ajustes.altura;
     // Animación del propio modelo
     const quiereClip = mezclador && (ajustes.animacion === 'auto' || ajustes.animacion === 'clip');
@@ -182,10 +228,23 @@ export function montar({ modelo, clips }, ajustesIniciales) {
   }
   aplicar(ajustesIniciales);
 
+  const ejePropio = new THREE.Vector3();
   function animar(t, dt = 1 / 60) {
     mezclador?.update(dt);
-    const extra = ajustes.animacion === 'girar' || (ajustes.animacion === 'auto' && !clips.length) ? t * 0.6 : 0;
-    raiz.rotation.y = THREE.MathUtils.degToRad(ajustes.giro) + extra;
+    const gira = ajustes.animacion === 'girar' || (ajustes.animacion === 'auto' && !clips.length);
+    if (gira) {
+      // El eje "propio" es la vertical del modelo ya inclinado
+      const eje = EJES_GIRO[ajustes.eje]?.eje ?? ejePropio.set(0, 1, 0).applyQuaternion(orientar.quaternion);
+      pivote.quaternion.setFromAxisAngle(eje, t * ajustes.velocidad);
+      // La flecha atraviesa el modelo por el centro, a lo largo del eje
+      const largo = mitad * 2 + 0.3;
+      flecha.setDirection(eje);
+      flecha.setLength(largo, 0.1, 0.06);
+      flecha.position.copy(eje).multiplyScalar(-largo / 2);
+    } else {
+      pivote.quaternion.identity();
+    }
+    flecha.visible = verEje && gira;
     raiz.position.y = ajustes.altura + (ajustes.animacion === 'flotar' ? 0.05 + Math.sin(t * 2) * 0.05 : 0);
   }
   /** Qué tan alto queda (en unidades del marcador), para poner la etiqueta encima */
@@ -193,9 +252,11 @@ export function montar({ modelo, clips }, ajustesIniciales) {
     raiz.updateWorldMatrix(true, true);
     const b = new THREE.Box3().setFromObject(raiz, true);
     if (raiz.parent) b.applyMatrix4(new THREE.Matrix4().copy(raiz.parent.matrixWorld).invert());
-    return b.isEmpty() ? 0.5 : b.max.y;
+    // Si gira sobre un eje horizontal, puede subir hasta su diagonal
+    const giraAcostado = ajustes.eje !== 'vertical' && ajustes.animacion !== 'ninguna';
+    return b.isEmpty() ? 0.5 : Math.max(b.max.y, giraAcostado ? ajustes.altura + mitad * 2.2 * ajustes.tamano : 0);
   }
-  return { objeto: raiz, aplicar, animar, alto };
+  return { objeto: raiz, aplicar, animar, alto, mostrarEje: (v) => { verEje = v; } };
 }
 
 /** Luz de ambiente "de habitación" para que los materiales metálicos (PBR) no se vean negros */
