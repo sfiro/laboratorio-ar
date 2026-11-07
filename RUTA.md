@@ -81,7 +81,7 @@ Combinar lo anterior en algo publicable. Ideas:
 - **Museo/escuela:** carteles que explican con animaciones 3D.
 - **Multijugador:** dos celulares viendo el mismo objeto (WebSockets/WebRTC, servidor propio en Node).
 
-### Nivel 9 — Nuestro propio motor de tracking (OpenCV.js)
+### Nivel 9 — Nuestro propio motor de tracking (hecho: marcadores desde cero + ORB con OpenCV.js)
 La parte de "creado por nosotros mismos":
 - Detectar un marcador cuadrado desde cero: umbral → contornos → esquinas → homografía → pose.
 - Luego seguimiento de imágenes con ORB + emparejamiento de features.

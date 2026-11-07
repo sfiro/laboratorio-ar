@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>AR · Nivel 9 · Motor propio</title>
+  <link rel="stylesheet" href="./estilos.css" />
+</head>
+<body>
+  <div id="ar" class="ar"></div>
+
+  <main id="inicio" class="panel">
+    <a class="volver" href="../">← Laboratorio</a>
+    <h1>Nuestro propio motor de AR</h1>
+    <p>
+      Aquí no usamos AR.js ni MindAR: <strong>hicimos el motor</strong>. Encontrar el objeto en la imagen,
+      calcular dónde está en 3D y poner encima lo virtual. Activa «Ver lo que ve el motor» para mirar por dentro.
+    </p>
+
+    <section class="caja">
+      <h2>Marcadores · 100 % nuestro</h2>
+      <p>Umbral → regiones → contorno → esquinas → código → homografía → pose. Sin librerías de visión.</p>
+      <button id="btnMarcadores" class="btn">Usar marcadores</button>
+      <a class="btn btn-sec" href="./marcadores.html" target="_blank">🖨️ Imprimir marcadores</a>
+    </section>
+
+    <section class="caja">
+      <h2>Imagen · ORB + flujo óptico</h2>
+      <p>
+        Puntos característicos y seguimiento con <strong>OpenCV.js</strong>; la homografía final y la pose, con nuestra matemática.
+        Usa la tarjeta del <a href="../08-mascota/tarjeta.html" target="_blank">nivel 8</a> (impresa o en otra pantalla).
+      </p>
+      <button id="btnImagen" class="btn">Usar la imagen</button>
+      <p class="nota">Descarga OpenCV.js (≈ 10 MB) la primera vez.</p>
+    </section>
+
+    <p id="mensaje" class="mensaje" hidden></p>
+  </main>
+
+  <header id="hudArriba" class="hud-arriba" hidden>
+    <button id="btnSalir" class="btn btn-sec">✕</button>
+    <span id="estado" class="chip">Buscando…</span>
+  </header>
+  <div id="datos" class="panel-datos" hidden></div>
+  <footer id="controles" class="hud-abajo" hidden>
+    <p id="ayuda"></p>
+    <div class="acciones">
+      <button id="btnDepurar" class="btn btn-sec">👁️ Ver lo que ve el motor</button>
+    </div>
+  </footer>
+
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

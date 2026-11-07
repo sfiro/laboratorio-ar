@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 900" width="900" height="900">
+<rect width="900" height="900" fill="#fff"/>
+<path d="M100 100h700v700h-700z M200 200v500h500v-500z" fill-rule="evenodd"/>
+<rect x="300" y="300" width="100" height="100"/><rect x="500" y="300" width="100" height="100"/><rect x="600" y="300" width="100" height="100"/><rect x="400" y="400" width="100" height="100"/><rect x="500" y="500" width="100" height="100"/><rect x="600" y="500" width="100" height="100"/><rect x="200" y="600" width="100" height="100"/><rect x="400" y="600" width="100" height="100"/><rect x="500" y="600" width="100" height="100"/><rect x="600" y="600" width="100" height="100"/>
+<text x="450" y="70" text-anchor="middle" font-family="Arial, sans-serif" font-size="40" fill="#999">ID 4</text>
+</svg>

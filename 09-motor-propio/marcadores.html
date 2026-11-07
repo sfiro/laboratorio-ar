@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Marcadores del motor propio</title>
+  <style>
+    :root { color-scheme: light; }
+    body { margin: 0; font: 15px system-ui, sans-serif; background: #f2f4f7; color: #1b1f2a; }
+    main { max-width: 900px; margin: 0 auto; padding: 20px 16px 40px; }
+    .rejilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; }
+    figure { margin: 0; background: #fff; border-radius: 8px; padding: 8px; text-align: center; box-shadow: 0 2px 10px #0001; }
+    img { width: 100%; display: block; }
+    button, a.btn { font: inherit; font-weight: 600; padding: 10px 16px; border-radius: 999px; border: 0; background: #4f8cff; color: #fff; text-decoration: none; cursor: pointer; }
+    .botones { display: flex; gap: 8px; flex-wrap: wrap; margin: 14px 0 20px; }
+    @media print {
+      body { background: #fff; } .texto { display: none; } main { padding: 0; }
+      .rejilla { grid-template-columns: repeat(2, 1fr); gap: 1cm; }
+      figure { box-shadow: none; break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="texto">
+      <h1>Marcadores del motor propio</h1>
+      <p>
+        Nuestro formato: 7 × 7 celdas, con un anillo negro y 5 × 5 celdas de datos. Hay 8 códigos, y entre dos
+        cualesquiera (aunque estén girados) cambian al menos 9 celdas, así que el motor puede corregir hasta 2 celdas mal leídas.
+        Imprímelos de 5 a 10 cm, sin recortar el margen blanco.
+      </p>
+      <div class="botones"><button onclick="print()">🖨️ Imprimir</button><a class="btn" href="./">← Volver</a></div>
+    </div>
+    <div class="rejilla" id="rejilla"></div>
+  </main>
+  <script>
+    document.getElementById('rejilla').innerHTML = Array.from({ length: 8 }, (_, i) =>
+      `<figure><img src="./marcadores/marcador-${i}.svg" alt="Marcador ${i}" /></figure>`).join('');
+  </script>
+</body>
+</html>
