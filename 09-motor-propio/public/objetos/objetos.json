@@ -1,0 +1,21 @@
+[
+  {
+    "id": 7,
+    "nombre": "gato Saludando",
+    "archivos": [
+      "gato Saludando.stl"
+    ],
+    "ajustes": {
+      "tamano": 1.25,
+      "altura": 0.12,
+      "arriba": "+Z",
+      "giro": 0,
+      "inclinarX": 0,
+      "inclinarZ": 0,
+      "animacion": "auto",
+      "clip": 0,
+      "eje": "vertical",
+      "velocidad": 0.6
+    }
+  }
+]
