@@ -31,7 +31,8 @@ function objetosDelProyecto() {
     fs.mkdirSync(carpeta, { recursive: true });
     fs.writeFileSync(lista, JSON.stringify(objetos.sort((a, b) => a.id - b.id), null, 2) + '\n');
   };
-  const nombreSeguro = (n) => path.basename(String(n)).replace(/[^\w.\- ]/g, '_');
+  // Sin espacios ni acentos: algunos servidores (y GitHub Pages) se llevan mal con ellos
+  const nombreSeguro = (n) => path.basename(String(n)).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-').replace(/[^\w.\-]/g, '_');
   return {
     name: 'objetos-del-proyecto',
     configureServer(server) {
