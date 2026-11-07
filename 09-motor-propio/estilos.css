@@ -123,3 +123,36 @@ body.en-ar { overflow: hidden; }
 .acciones-foto { display: flex; gap: 8px; justify-content: center; }
 
 [hidden] { display: none !important; }
+
+/* Mis objetos 3D */
+.enlace { background: none; border: 0; padding: 0; font: inherit; cursor: pointer; }
+.lista-objetos { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 10px; margin-top: 16px; }
+.tarjeta-objeto {
+  display: grid; gap: 4px; justify-items: center; padding: 10px; border: 2px solid transparent; border-radius: 14px;
+  background: #ffffff10; color: #eef1f6; font: inherit; cursor: pointer;
+}
+.tarjeta-objeto.propia { border-color: #3ddc84; }
+.tarjeta-objeto img { width: 64px; height: 64px; border-radius: 6px; }
+.tarjeta-objeto .num { font-size: 12px; color: #b4bccb; }
+.tarjeta-objeto .nom { font-weight: 600; font-size: 14px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tarjeta-objeto .tipo { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: #ffffff1a; color: #b4bccb; }
+.tarjeta-objeto.propia .tipo { background: #3ddc84; color: #0b0d12; }
+.editor { display: grid; gap: 10px; margin-top: 8px; }
+.editor-cabeza { display: flex; gap: 10px; align-items: center; }
+.editor-cabeza img { width: 44px; height: 44px; border-radius: 4px; }
+.editor-cabeza h2 { margin: 0; font-size: 18px; }
+.editor-cabeza p { margin: 0; font-size: 14px; }
+.vista-previa { width: 100%; height: min(60vh, 380px); border-radius: 14px; background: #161a23; touch-action: none; display: block; }
+.editor .nota { margin: 0; }
+.editor > label.btn { justify-self: start; }
+.aviso { margin: 0; padding: 10px 12px; border-radius: 10px; background: #ffffff14; color: #eef1f6 !important; font-size: 14px; }
+.aviso.problema { background: #3a2a12; color: #ffd8a0 !important; }
+.ajustes { display: grid; gap: 12px; padding: 12px; border-radius: 14px; background: #ffffff10; }
+.ajustes label { display: grid; gap: 4px; font-size: 14px; color: #b4bccb; }
+.ajustes label b { color: #fff; font-weight: 600; justify-self: end; margin-top: -20px; }
+.ajustes input[type=range] { width: 100%; }
+.ajustes .casilla { display: flex; gap: 8px; align-items: center; }
+.ajustes select { font: inherit; padding: 8px; border-radius: 8px; background: #0b0d12; color: #fff; border: 1px solid #ffffff33; }
+.acciones-editor { display: flex; gap: 8px; flex-wrap: wrap; }
+.peligro { color: #ffb4c0; }
+.editor > #btnProbar { justify-self: start; }

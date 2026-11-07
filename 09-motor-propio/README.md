@@ -37,6 +37,31 @@ Es la misma tubería que usan AR.js y ArUco por dentro, escrita desde cero:
 
 Con 9 celdas de diferencia, corregir 2 errores nunca confunde un marcador con otro.
 
+## Mis objetos 3D (`mis-objetos.js`, `editor-objetos.js`)
+
+Pon **tus propios modelos** sobre los marcadores, desde el celular y sin tocar código:
+
+1. En la portada del nivel toca **«🧩 Elegir mis objetos»**.
+2. Toca un marcador (0 a 7) y luego **«📂 Elegir modelo…»**.
+3. Ajusta tamaño, giro, altura y movimiento mirando la vista previa: el marcador en el piso y tu objeto encima, igual que saldrá en la cámara.
+4. Toca **«📷 Probar con la cámara»**.
+
+| Formato | Notas |
+|---|---|
+| `.glb` | El mejor: todo en un archivo, con texturas y animaciones. También comprimido con **Draco** o **Meshopt**. |
+| `.gltf` | Si trae `.bin` o texturas aparte, **elígelos todos a la vez**. |
+| `.obj` | Elige también su `.mtl` y sus texturas. Si falta el `.mtl`, te avisa y lo pinta gris. |
+| `.stl` / `.ply` | Típicos de impresión 3D. Suelen venir con Z hacia arriba: marca **«Sale acostado»**. |
+| `.fbx` | Funciona, pero conviene pasarlo a `.glb` con Blender. |
+
+- **Se guarda solo en ese celular** (IndexedDB del navegador). No se sube a ningún servidor; en otro celular hay que elegirlos de nuevo.
+- Cada modelo se **normaliza**: se centra, se apoya en el papel y su lado más grande mide 0.8 del marcador. Así da igual si lo hiciste en milímetros o en metros.
+- Si el modelo trae **animaciones**, se elige cuál se reproduce. Si no, puede girar, flotar o quedarse quieto.
+- Para que vaya fluido en el celular: menos de **100 000 triángulos** y texturas de 2048 px como máximo. Con más de 300 000 te avisa.
+- Modelos de prueba en `pruebas/modelos/`: un `.glb` animado, una torre `.stl` acostada y un dado `.obj` + `.mtl`.
+
+**¿Dónde consigo modelos?** Hazlos con **Blender** (libre) y exporta a glTF Binary (`.glb`). O descárgalos con licencia libre (CC0 o CC-BY) de Poly Haven, Kenney o Sketchfab (filtro «Downloadable»), dando el crédito que pida la licencia.
+
 ## Parte 2 · Imagen: ORB y flujo óptico (`imagenes.js`)
 
 Así funciona MindAR por dentro, en dos fases. De **OpenCV.js** usamos solo ORB, el emparejador, RANSAC y el flujo óptico.

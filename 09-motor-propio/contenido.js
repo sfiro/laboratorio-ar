@@ -82,19 +82,24 @@ const OBJETOS = [
   { nombre: 'Diamante', crear: () => new THREE.Group().add(new THREE.Mesh(new THREE.OctahedronGeometry(0.22), mat('#7fd3ff', { metalness: 0.4, roughness: 0.1 })).translateY(0.3)) },
 ];
 
-export function contenidoMarcador(id) {
+export const NOMBRES_DE_FABRICA = OBJETOS.map((o) => o.nombre);
+
+/** propio (opcional): tu objeto de «Mis objetos 3D» = { objeto, animar(t, dt), nombre } */
+export function contenidoMarcador(id, propio = null) {
   const def = OBJETOS[id % OBJETOS.length];
   const ancla = new THREE.Group();
   ancla.add(contorno(1, 1, '#3ddc84'));
   const parado = new THREE.Group();
   parado.rotation.x = Math.PI / 2; // su Y apunta fuera del papel
-  const objeto = def.crear();
+  const objeto = propio ? propio.objeto : def.crear();
   parado.add(objeto);
-  const et = etiqueta(`ID ${id} · ${def.nombre}`);
-  et.position.y = 0.95;
+  const et = etiqueta(`ID ${id} · ${propio ? propio.nombre : def.nombre}`);
+  // La etiqueta, justo encima del objeto
+  et.position.y = propio ? Math.max(0.5, propio.alto() + 0.25) : 0.95;
   parado.add(et);
   ancla.add(parado);
-  return { objeto: ancla, animar: (t) => { objeto.rotation.y = t * (objeto.userData.giro ?? 0.6); } };
+  const animar = propio ? propio.animar : (t) => { objeto.rotation.y = t * (objeto.userData.giro ?? 0.6); };
+  return { objeto: ancla, animar, etiqueta: et };
 }
 
 export function contenidoImagen(alto) {

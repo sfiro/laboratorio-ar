@@ -1,0 +1,245 @@
+// Pantalla «Mis objetos 3D»: elegir un marcador, subir tu modelo y ajustarlo viendo cómo quedará.
+import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import {
+  ACEPTAR, AJUSTES_INICIALES, guardarObjeto, borrarObjeto, leerObjetos, registroDesdeArchivos,
+  cargarModelo, montar, ambienteDeHabitacion, pedirGuardadoPermanente,
+} from './mis-objetos.js';
+import { NOMBRES_DE_FABRICA } from './contenido.js';
+
+const $ = (id) => document.getElementById(id);
+const CANTIDAD = 8;
+let registros = new Map(); // id de marcador → registro guardado
+let vista = null;          // la vista previa 3D (se crea una sola vez)
+let actual = null;         // { id, registro, montado }
+
+export async function abrirMisObjetos() {
+  $('inicio').hidden = true;
+  $('misObjetos').hidden = false;
+  window.scrollTo(0, 0);
+  await refrescarLista();
+}
+
+function cerrar() {
+  cerrarEditor();
+  $('misObjetos').hidden = true;
+  $('inicio').hidden = false;
+}
+
+async function refrescarLista() {
+  registros = new Map((await leerObjetos()).map((r) => [r.id, r]));
+  const lista = $('listaObjetos');
+  lista.innerHTML = '';
+  for (let id = 0; id < CANTIDAD; id++) {
+    const r = registros.get(id);
+    const b = document.createElement('button');
+    b.className = 'tarjeta-objeto' + (r ? ' propia' : '');
+    b.innerHTML = `<img src="./marcadores/marcador-${id}.svg" alt="" /><span class="num">ID ${id}</span>
+      <span class="nom">${r ? escapar(r.nombre) : NOMBRES_DE_FABRICA[id]}</span><span class="tipo">${r ? 'tuyo' : 'de fábrica'}</span>`;
+    b.addEventListener('click', () => abrirEditor(id));
+    lista.append(b);
+  }
+}
+
+const escapar = (t) => t.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+// ───────────────────────── Editor de un marcador ─────────────────────────
+async function abrirEditor(id) {
+  $('listaObjetos').hidden = true;
+  $('editor').hidden = false;
+  $('editorTitulo').textContent = `Marcador ${id}`;
+  $('editorMarcador').src = `./marcadores/marcador-${id}.svg`;
+  aviso('');
+  crearVista();
+  actual = { id, registro: registros.get(id) ?? null, montado: null };
+  await mostrarActual();
+}
+
+function cerrarEditor() {
+  quitarDeVista();
+  actual = null;
+  $('editor').hidden = true;
+  $('listaObjetos').hidden = false;
+  vista?.renderer.setAnimationLoop(null);
+}
+
+async function mostrarActual() {
+  quitarDeVista();
+  const r = actual.registro;
+  $('ajustes').hidden = !r;
+  $('btnQuitar').hidden = !r;
+  $('editorNombre').textContent = r ? r.nombre : `${NOMBRES_DE_FABRICA[actual.id]} (de fábrica)`;
+  vista.marcador.material.map = vista.texturas[actual.id];
+  vista.marcador.material.needsUpdate = true;
+  vista.renderer.setAnimationLoop(dibujarVista);
+  if (!r) return;
+  aviso('Cargando el modelo…');
+  try {
+    const leido = await cargarModelo(r);
+    if (actual?.registro !== r) return; // cambiaste de marcador mientras cargaba
+    actual.montado = montar(leido, r.ajustes);
+    vista.soporte.add(actual.montado.objeto);
+    llenarAjustes(r.ajustes, leido.clips);
+    const avisos = [];
+    if (leido.faltan.length) avisos.push(`Faltan archivos: ${leido.faltan.join(', ')}. Elígelos junto con el modelo.`);
+    if (leido.triangulos > 300000) avisos.push(`Tiene ${leido.triangulos.toLocaleString('es')} triángulos: en el celular puede ir lento. Mejor menos de 100 000.`);
+    aviso(avisos.join(' '), avisos.length > 0);
+    $('editorInfo').textContent = `${leido.triangulos.toLocaleString('es')} triángulos · ${leido.clips.length} ${leido.clips.length === 1 ? 'animación' : 'animaciones'} · ${peso(r)}`;
+  } catch (err) {
+    console.error(err);
+    aviso(`No pude leer el modelo: ${err?.message ?? err}`, true);
+  }
+}
+
+function peso(r) {
+  const bytes = r.archivos.reduce((s, a) => s + a.blob.size, 0);
+  return bytes < 1048576 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / 1048576).toFixed(1)} MB`;
+}
+
+function aviso(texto, problema = false) {
+  $('editorAviso').textContent = texto;
+  $('editorAviso').hidden = !texto;
+  $('editorAviso').classList.toggle('problema', problema);
+  if (!texto) $('editorInfo').textContent = '';
+}
+
+function quitarDeVista() {
+  if (!actual?.montado) return;
+  vista.soporte.remove(actual.montado.objeto);
+  actual.montado.objeto.traverse((o) => {
+    o.geometry?.dispose();
+    for (const m of [o.material].flat()) { if (!m) continue; for (const v of Object.values(m)) v?.isTexture && v.dispose(); m.dispose(); }
+  });
+  actual.montado = null;
+}
+
+// Los controles de tamaño, giro, altura, acostado y animación
+function llenarAjustes(a, clips) {
+  $('ajTamano').value = a.tamano; $('ajGiro').value = a.giro; $('ajAltura').value = a.altura; $('ajAcostado').checked = a.acostado;
+  const sel = $('ajAnimacion');
+  sel.innerHTML = '';
+  const opcion = (valor, texto) => sel.append(Object.assign(document.createElement('option'), { value: valor, textContent: texto }));
+  opcion('auto', clips.length ? 'Automática (la del modelo)' : 'Automática (girar)');
+  clips.forEach((c, i) => opcion(`clip:${i}`, `Del modelo: ${c.name || `animación ${i + 1}`}`));
+  opcion('girar', 'Girar'); opcion('flotar', 'Flotar'); opcion('ninguna', 'Quieto');
+  sel.value = a.animacion === 'clip' ? `clip:${a.clip}` : a.animacion;
+  if (!sel.value) sel.value = 'auto';
+  mostrarValores();
+}
+
+function leerAjustes() {
+  const anim = $('ajAnimacion').value;
+  return {
+    tamano: +$('ajTamano').value, giro: +$('ajGiro').value, altura: +$('ajAltura').value, acostado: $('ajAcostado').checked,
+    animacion: anim.startsWith('clip:') ? 'clip' : anim, clip: anim.startsWith('clip:') ? +anim.slice(5) : 0,
+  };
+}
+
+function mostrarValores() {
+  $('vTamano').textContent = `${(+$('ajTamano').value).toFixed(2)}×`;
+  $('vGiro').textContent = `${$('ajGiro').value}°`;
+  $('vAltura').textContent = (+$('ajAltura').value).toFixed(2);
+}
+
+let guardando = null;
+function alCambiarAjuste() {
+  if (!actual?.registro) return;
+  mostrarValores();
+  actual.registro.ajustes = leerAjustes();
+  actual.montado?.aplicar(actual.registro.ajustes);
+  // Guardamos un momento después de que dejes de mover el control
+  clearTimeout(guardando);
+  guardando = setTimeout(() => guardarObjeto(actual.registro).catch((e) => aviso(`No se pudo guardar: ${e.message}`, true)), 300);
+}
+
+async function alElegirArchivos(lista) {
+  if (!lista?.length || !actual) return;
+  try {
+    const nuevo = registroDesdeArchivos(actual.id, lista);
+    aviso('Guardando…');
+    await guardarObjeto(nuevo);
+    pedirGuardadoPermanente();
+    registros.set(actual.id, nuevo);
+    actual.registro = nuevo;
+    await mostrarActual();
+  } catch (err) {
+    aviso(err.message, true);
+  }
+}
+
+// ───────────────────────── Vista previa 3D ─────────────────────────
+// Se ve el marcador en el piso y el objeto encima, tal como saldrá en la cámara.
+function crearVista() {
+  if (vista) { ajustarVista(); return; }
+  const lienzo = $('vistaPrevia');
+  const renderer = new THREE.WebGLRenderer({ canvas: lienzo, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  const escena = new THREE.Scene();
+  const camara = new THREE.PerspectiveCamera(40, 1, 0.01, 100);
+  camara.position.set(1.4, 1.3, 1.8);
+  const controles = new OrbitControls(camara, lienzo);
+  controles.target.set(0, 0.3, 0);
+  controles.enableDamping = true;
+  ambienteDeHabitacion(renderer).then((t) => { escena.environment = t; escena.environmentIntensity = 0.6; });
+  const sol = new THREE.DirectionalLight('#fff', 2.2);
+  sol.position.set(0.3, 1, 1);
+  escena.add(new THREE.HemisphereLight('#fff', '#556070', 1.8), sol);
+  // El marcador: la parte negra mide 1 (el SVG mide 900 y su borde negro 700)
+  const texturas = [];
+  const cargador = new THREE.TextureLoader();
+  for (let id = 0; id < CANTIDAD; id++) {
+    const t = cargador.load(`./marcadores/marcador-${id}.svg`);
+    t.colorSpace = THREE.SRGBColorSpace;
+    texturas.push(t);
+  }
+  const marcador = new THREE.Mesh(new THREE.PlaneGeometry(900 / 700, 900 / 700), new THREE.MeshBasicMaterial({ map: texturas[0] }));
+  marcador.rotation.x = -Math.PI / 2;
+  const soporte = new THREE.Group();
+  escena.add(marcador, soporte, new THREE.GridHelper(4, 16, '#3a4255', '#252b38').translateY(-0.002));
+  const reloj = new THREE.Timer();
+  vista = { renderer, escena, camara, controles, marcador, soporte, texturas, reloj };
+  ajustarVista();
+  window.addEventListener('resize', ajustarVista);
+}
+
+function ajustarVista() {
+  const lienzo = vista.renderer.domElement;
+  const w = lienzo.clientWidth, h = lienzo.clientHeight;
+  if (!w || !h) return;
+  vista.renderer.setSize(w, h, false);
+  vista.camara.aspect = w / h;
+  vista.camara.updateProjectionMatrix();
+}
+
+function dibujarVista(ahora) {
+  vista.reloj.update(ahora);
+  const lienzo = vista.renderer.domElement;
+  if (lienzo.width !== Math.round(lienzo.clientWidth * vista.renderer.getPixelRatio())) ajustarVista();
+  actual?.montado?.animar(vista.reloj.getElapsed(), Math.min(vista.reloj.getDelta(), 0.1));
+  vista.controles.update();
+  vista.renderer.render(vista.escena, vista.camara);
+}
+
+// ───────────────────────── Conectar los botones ─────────────────────────
+export function prepararMisObjetos({ alProbar }) {
+  $('btnMisObjetos').addEventListener('click', abrirMisObjetos);
+  $('btnCerrarObjetos').addEventListener('click', cerrar);
+  $('btnVolverLista').addEventListener('click', () => { cerrarEditor(); refrescarLista(); });
+  $('archivoModelo').accept = ACEPTAR;
+  $('archivoModelo').addEventListener('change', (e) => { alElegirArchivos(e.target.files); e.target.value = ''; });
+  for (const id of ['ajTamano', 'ajGiro', 'ajAltura', 'ajAcostado', 'ajAnimacion']) $(id).addEventListener('input', alCambiarAjuste);
+  $('btnReiniciar').addEventListener('click', () => {
+    if (!actual?.registro) return;
+    llenarAjustes(AJUSTES_INICIALES, []);
+    alCambiarAjuste();
+    mostrarActual();
+  });
+  $('btnQuitar').addEventListener('click', async () => {
+    if (!actual?.registro || !confirm(`¿Quitar «${actual.registro.nombre}» del marcador ${actual.id}? Volverá el objeto de fábrica.`)) return;
+    await borrarObjeto(actual.id);
+    registros.delete(actual.id);
+    actual.registro = null;
+    await mostrarActual();
+  });
+  $('btnProbar').addEventListener('click', () => { cerrar(); alProbar(); });
+}

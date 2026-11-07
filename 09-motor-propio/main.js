@@ -3,6 +3,8 @@ import * as THREE from 'three';
 import { MotorPropio } from './motor.js';
 import { DetectorDeMarcadores } from './marcadores.js';
 import { contenidoMarcador, contenidoImagen } from './contenido.js';
+import { leerObjetos, cargarModelo, montar, ambienteDeHabitacion } from './mis-objetos.js';
+import { prepararMisObjetos } from './editor-objetos.js';
 
 const $ = (id) => document.getElementById(id);
 let motor = null, modo = null;
@@ -26,8 +28,14 @@ async function empezar(nuevoModo) {
   try {
     motor = new MotorPropio($('ar'));
     let detector, alto = 1;
+    const propios = new Map(), fallos = []; // id de marcador → tu objeto (de «Mis objetos 3D»)
     if (modo === 'marcadores') {
       detector = new DetectorDeMarcadores();
+      const registros = await leerObjetos().catch(() => []);
+      for (const r of registros) {
+        estado(`Cargando tus objetos… (${r.nombre})`);
+        try { propios.set(r.id, { ...montar(await cargarModelo(r), r.ajustes), nombre: r.nombre }); } catch (e) { console.error(e); fallos.push(r.nombre); }
+      }
     } else {
       estado('Descargando OpenCV.js (≈ 10 MB)…');
       const cv = await cargarOpenCV();
@@ -45,18 +53,21 @@ async function empezar(nuevoModo) {
     motor.escena.add(new THREE.HemisphereLight('#fff', '#556070', 1.8), sol);
     const animaciones = new Map();
     motor.alCrearAncla = (clave, ancla, r) => {
-      const c = modo === 'marcadores' ? contenidoMarcador(r.id) : contenidoImagen(alto);
+      const c = modo === 'marcadores' ? contenidoMarcador(r.id, propios.get(r.id)) : contenidoImagen(alto);
       ancla.grupo.add(c.objeto);
       animaciones.set(clave, c.animar);
     };
-    motor.alCuadro.push((t) => {
-      for (const [clave, animar] of animaciones) animar(t);
+    motor.alCuadro.push((t, dt) => {
+      for (const [clave, animar] of animaciones) animar(t, dt);
       const visibles = [...motor.anclas.values()].filter((a) => a.visible).length;
       $('estado').textContent = visibles ? (modo === 'marcadores' ? `${visibles} marcador${visibles > 1 ? 'es' : ''}` : 'Imagen ✓') : 'Buscando…';
       $('estado').classList.toggle('visto', visibles > 0);
       $('datos').innerHTML = datos(detector);
     });
     await motor.iniciar({ detector, estado });
+    // Reflejos de una habitación: así los materiales metálicos de tus modelos no se ven negros
+    if (propios.size) { motor.escena.environment = await ambienteDeHabitacion(motor.renderer); motor.escena.environmentIntensity = 0.6; }
+    if (fallos.length) estado(`No pude cargar: ${fallos.join(', ')}. Se usa el objeto de fábrica.`);
     if (import.meta.env.DEV) { window.__motor = motor; } // solo para probar
   } catch (err) {
     console.error(err);
@@ -94,6 +105,7 @@ function salir() {
 }
 
 $('btnMarcadores').addEventListener('click', () => empezar('marcadores'));
+prepararMisObjetos({ alProbar: () => empezar('marcadores') });
 $('btnImagen').addEventListener('click', () => empezar('imagen'));
 $('btnSalir').addEventListener('click', salir);
 $('btnDepurar').addEventListener('click', () => {
