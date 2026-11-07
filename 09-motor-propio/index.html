@@ -26,7 +26,7 @@
 
     <section class="caja">
       <h2>Mis objetos 3D</h2>
-      <p>Pon tus propios modelos (.glb, .gltf, .obj, .stl, .ply o .fbx) sobre cada marcador. Se guardan solo en este celular.</p>
+      <p>Pon tus propios modelos (.glb, .gltf, .obj, .stl, .ply o .fbx) sobre cada marcador.</p>
       <button id="btnMisObjetos" class="btn">🧩 Elegir mis objetos</button>
     </section>
 
@@ -47,6 +47,7 @@
     <button id="btnCerrarObjetos" class="volver enlace">← Volver</button>
     <h1>Mis objetos 3D</h1>
     <p>Toca un marcador y elige tu modelo. Si trae texturas o archivos aparte (.bin, .mtl, .png…), <strong>elígelos todos a la vez</strong>.</p>
+    <p class="nota"><b>Del proyecto</b>: salen en cualquier celular. <b>Solo aquí</b>: guardados en este navegador.</p>
     <div id="listaObjetos" class="lista-objetos"></div>
 
     <section id="editor" class="editor" hidden>
@@ -78,6 +79,7 @@
         <div class="acciones-editor">
           <button id="btnReiniciar" class="btn btn-sec">↺ Ajustes iniciales</button>
           <button id="btnQuitar" class="btn btn-sec peligro">🗑️ Quitar</button>
+          <button id="btnGuardarProyecto" class="btn" hidden>💾 Guardar en el proyecto (para todos)</button>
         </div>
       </div>
       <button id="btnProbar" class="btn">📷 Probar con la cámara</button>

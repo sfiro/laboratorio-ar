@@ -2,13 +2,16 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import {
-  ACEPTAR, AJUSTES_INICIALES, LADOS_ARRIBA, EJES_GIRO, completarAjustes, guardarObjeto, borrarObjeto, leerObjetos, registroDesdeArchivos,
+  AJUSTES_INICIALES, LADOS_ARRIBA, EJES_GIRO, completarAjustes, guardarObjeto, borrarObjeto, leerTodos, registroDesdeArchivos,
+  guardarEnProyecto, quitarDelProyecto,
   cargarModelo, montar, ambienteDeHabitacion, pedirGuardadoPermanente,
 } from './mis-objetos.js';
 import { NOMBRES_DE_FABRICA } from './contenido.js';
 
 const $ = (id) => document.getElementById(id);
 const CANTIDAD = 8;
+const DESARROLLO = import.meta.env.DEV; // con npm run dev se puede guardar en el proyecto
+const ETIQUETA = { proyecto: 'del proyecto', tuyo: 'solo aquí' };
 let registros = new Map(); // id de marcador → registro guardado
 let vista = null;          // la vista previa 3D (se crea una sola vez)
 let actual = null;         // { id, registro, montado }
@@ -27,15 +30,15 @@ function cerrar() {
 }
 
 async function refrescarLista() {
-  registros = new Map((await leerObjetos()).map((r) => [r.id, r]));
+  registros = await leerTodos();
   const lista = $('listaObjetos');
   lista.innerHTML = '';
   for (let id = 0; id < CANTIDAD; id++) {
     const r = registros.get(id);
     const b = document.createElement('button');
-    b.className = 'tarjeta-objeto' + (r ? ' propia' : '');
+    b.className = 'tarjeta-objeto' + (r ? ` propia ${r.origen}` : '');
     b.innerHTML = `<img src="./marcadores/marcador-${id}.svg" alt="" /><span class="num">ID ${id}</span>
-      <span class="nom">${r ? escapar(r.nombre) : NOMBRES_DE_FABRICA[id]}</span><span class="tipo">${r ? 'tuyo' : 'de fábrica'}</span>`;
+      <span class="nom">${r ? escapar(r.nombre) : NOMBRES_DE_FABRICA[id]}</span><span class="tipo">${r ? ETIQUETA[r.origen] : 'genérico'}</span>`;
     b.addEventListener('click', () => abrirEditor(id));
     lista.append(b);
   }
@@ -67,8 +70,12 @@ async function mostrarActual() {
   quitarDeVista();
   const r = actual.registro;
   $('ajustes').hidden = !r;
-  $('btnQuitar').hidden = !r;
-  $('editorNombre').textContent = r ? r.nombre : `${NOMBRES_DE_FABRICA[actual.id]} (de fábrica)`;
+  const tuyo = r?.origen === 'tuyo';
+  // Quitar: lo de este navegador siempre; lo del proyecto, solo con npm run dev
+  $('btnQuitar').hidden = !r || (!tuyo && !DESARROLLO);
+  $('btnQuitar').textContent = tuyo ? (r.debajo ? '↩︎ Volver al del proyecto' : '🗑️ Quitar') : '🗑️ Quitar del proyecto';
+  $('btnGuardarProyecto').hidden = !(DESARROLLO && tuyo);
+  $('editorNombre').textContent = r ? `${r.nombre} (${ETIQUETA[r.origen]})` : `${NOMBRES_DE_FABRICA[actual.id]} (genérico)`;
   vista.marcador.material.map = vista.texturas[actual.id];
   vista.marcador.material.needsUpdate = true;
   vista.renderer.setAnimationLoop(dibujarVista);
@@ -93,6 +100,7 @@ async function mostrarActual() {
 }
 
 function peso(r) {
+  if (!r.archivos.every((a) => a.blob)) return 'en el proyecto'; // los del proyecto están en el servidor
   const bytes = r.archivos.reduce((s, a) => s + a.blob.size, 0);
   return bytes < 1048576 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / 1048576).toFixed(1)} MB`;
 }
@@ -163,7 +171,27 @@ function alCambiarAjuste() {
   actual.montado?.aplicar(actual.registro.ajustes);
   // Guardamos un momento después de que dejes de mover el control
   clearTimeout(guardando);
-  guardando = setTimeout(() => guardarObjeto(actual.registro).catch((e) => aviso(`No se pudo guardar: ${e.message}`, true)), 300);
+  const r = actual.registro;
+  guardando = setTimeout(() => {
+    // Los del proyecto, en desarrollo, se guardan en el proyecto; si no, en este navegador
+    const guardar = r.origen === 'proyecto' && DESARROLLO ? guardarEnProyecto(r) : guardarEnNavegador(r);
+    guardar.catch((e) => aviso(`No se pudo guardar: ${e.message}`, true));
+  }, 300);
+}
+
+/** Guarda en este navegador (un objeto del proyecto con tus ajustes también queda «solo aquí») */
+async function guardarEnNavegador(r) {
+  const { debajo, ...limpio } = r;
+  if (limpio.origen === 'proyecto') { r.debajo = { ...limpio }; limpio.origen = 'tuyo'; r.origen = 'tuyo'; }
+  await guardarObjeto(limpio);
+  if (actual?.registro === r) mostrarBotones(r);
+}
+
+function mostrarBotones(r) {
+  $('btnQuitar').hidden = false;
+  $('btnQuitar').textContent = r.debajo ? '↩︎ Volver al del proyecto' : '🗑️ Quitar';
+  $('btnGuardarProyecto').hidden = !DESARROLLO;
+  $('editorNombre').textContent = `${r.nombre} (${ETIQUETA[r.origen]})`;
 }
 
 async function alElegirArchivos(lista) {
@@ -173,6 +201,7 @@ async function alElegirArchivos(lista) {
     aviso('Guardando…');
     await guardarObjeto(nuevo);
     pedirGuardadoPermanente();
+    nuevo.debajo = registros.get(actual.id)?.origen === 'proyecto' ? registros.get(actual.id) : registros.get(actual.id)?.debajo;
     registros.set(actual.id, nuevo);
     actual.registro = nuevo;
     await mostrarActual();
@@ -239,7 +268,8 @@ export function prepararMisObjetos({ alProbar }) {
   $('btnMisObjetos').addEventListener('click', abrirMisObjetos);
   $('btnCerrarObjetos').addEventListener('click', cerrar);
   $('btnVolverLista').addEventListener('click', () => { cerrarEditor(); refrescarLista(); });
-  $('archivoModelo').accept = ACEPTAR;
+  // Sin "accept": los celulares no conocen tipos como .stl o .glb y no dejarían elegirlos.
+  // Revisamos el formato después de elegir.
   $('archivoModelo').addEventListener('change', (e) => { alElegirArchivos(e.target.files); e.target.value = ''; });
   for (const [valor, { texto }] of Object.entries(LADOS_ARRIBA)) opcion($('ajArriba'), valor, texto);
   for (const [valor, { texto }] of Object.entries(EJES_GIRO)) opcion($('ajEje'), valor, texto);
@@ -257,11 +287,35 @@ export function prepararMisObjetos({ alProbar }) {
     mostrarActual();
   });
   $('btnQuitar').addEventListener('click', async () => {
-    if (!actual?.registro || !confirm(`¿Quitar «${actual.registro.nombre}» del marcador ${actual.id}? Volverá el objeto de fábrica.`)) return;
-    await borrarObjeto(actual.id);
-    registros.delete(actual.id);
-    actual.registro = null;
+    const r = actual?.registro;
+    if (!r) return;
+    const tuyo = r.origen === 'tuyo';
+    const pregunta = tuyo
+      ? `¿Quitar «${r.nombre}» de este navegador? ${r.debajo ? 'Volverá el del proyecto.' : 'Volverá el genérico.'}`
+      : `¿Quitar «${r.nombre}» del proyecto? Se borran sus archivos de public/objetos/${actual.id}/.`;
+    if (!confirm(pregunta)) return;
+    try {
+      if (tuyo) await borrarObjeto(actual.id); else await quitarDelProyecto(actual.id);
+    } catch (e) { return aviso(`No se pudo quitar: ${e.message}`, true); }
+    registros = await leerTodos();
+    actual.registro = registros.get(actual.id) ?? null;
     await mostrarActual();
+  });
+  $('btnGuardarProyecto').addEventListener('click', async () => {
+    const r = actual?.registro;
+    if (!r) return;
+    aviso('Guardando en el proyecto…');
+    try {
+      clearTimeout(guardando);
+      await guardarEnProyecto(r);
+      await borrarObjeto(actual.id); // ya está en el proyecto: la copia de este navegador sobra
+      registros = await leerTodos();
+      actual.registro = registros.get(actual.id) ?? null;
+      await mostrarActual();
+      aviso(`Guardado en public/objetos/${actual.id}/. Publícalo para que salga en cualquier celular.`);
+    } catch (e) {
+      aviso(`No se pudo guardar en el proyecto: ${e.message}`, true);
+    }
   });
   $('btnProbar').addEventListener('click', () => { cerrar(); alProbar(); });
 }

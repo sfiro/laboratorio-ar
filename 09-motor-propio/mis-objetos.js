@@ -18,7 +18,6 @@ import dracoWrapper from 'three/examples/jsm/libs/draco/gltf/draco_wasm_wrapper.
 import dracoWasm from 'three/examples/jsm/libs/draco/gltf/draco_decoder.wasm?url';
 
 export const FORMATOS = ['glb', 'gltf', 'obj', 'stl', 'ply', 'fbx'];
-export const ACEPTAR = '.glb,.gltf,.obj,.mtl,.stl,.ply,.fbx,.bin,.png,.jpg,.jpeg,.webp,.ktx2,.tga';
 export const AJUSTES_INICIALES = {
   tamano: 1, altura: 0,
   arriba: '+Y',                       // qué eje del modelo apunta hacia arriba
@@ -81,6 +80,56 @@ export const guardarObjeto = (registro) => operar('readwrite', (s) => s.put(regi
 export const borrarObjeto = (id) => operar('readwrite', (s) => s.delete(id));
 export const leerObjetos = async () => (await operar('readonly', (s) => s.getAll())) ?? [];
 
+// ───────────────────────── Objetos del proyecto (para todos) ─────────────────────────
+// Están en public/objetos/: un objetos.json con la lista y una carpeta por marcador.
+// Se publican con la página, así que salen en cualquier celular. Reemplazan a los genéricos.
+const CARPETA = './objetos/';
+
+export async function leerObjetosDelProyecto() {
+  try {
+    const r = await fetch(`${CARPETA}objetos.json`, { cache: 'no-cache' });
+    if (!r.ok) return [];
+    const lista = await r.json();
+    return lista.map((o) => ({
+      ...o,
+      origen: 'proyecto',
+      ajustes: completarAjustes(o.ajustes),
+      archivos: o.archivos.map((nombre) => ({ nombre, url: `${CARPETA}${o.id}/${encodeURIComponent(nombre)}` })),
+    }));
+  } catch {
+    return [];
+  }
+}
+
+/** Todos los objetos por marcador: los del proyecto y, encima, los guardados en este navegador */
+export async function leerTodos() {
+  const todos = new Map();
+  for (const r of await leerObjetosDelProyecto()) todos.set(r.id, r);
+  for (const r of await leerObjetos().catch(() => [])) todos.set(r.id, { ...r, origen: r.origen ?? 'tuyo', debajo: todos.get(r.id) });
+  return todos;
+}
+
+// Solo en desarrollo (npm run dev): el servidor de Vite escribe los archivos en public/objetos/
+async function pedirAlServidor(accion, datos) {
+  const r = await fetch(`/__objetos/${accion}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datos) });
+  if (!r.ok) throw new Error(await r.text());
+}
+const aBase64 = async (blob) => {
+  const bytes = new Uint8Array(await blob.arrayBuffer());
+  let texto = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) texto += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(texto);
+};
+/** Guarda el objeto en el proyecto. Si solo cambiaron los ajustes, no reenvía los archivos. */
+export async function guardarEnProyecto(registro) {
+  const conArchivos = registro.archivos.every((a) => a.blob);
+  await pedirAlServidor('guardar', {
+    id: registro.id, nombre: registro.nombre, ajustes: registro.ajustes,
+    archivos: conArchivos ? await Promise.all(registro.archivos.map(async (a) => ({ nombre: a.nombre, base64: await aBase64(a.blob) }))) : null,
+  });
+}
+export const quitarDelProyecto = (id) => pedirAlServidor('quitar', { id });
+
 /** Pide al navegador que no borre lo guardado cuando le falte espacio */
 export const pedirGuardadoPermanente = () => navigator.storage?.persist?.().catch(() => false);
 
@@ -91,7 +140,7 @@ export function registroDesdeArchivos(id, lista) {
   if (!principal) throw new Error(`No encontré un modelo. Elige un archivo ${FORMATOS.map((f) => '.' + f).join(', ')}.`);
   // El modelo principal va primero
   archivos.sort((a, b) => (a === principal ? -1 : b === principal ? 1 : 0));
-  return { id, nombre: principal.nombre.replace(/\.[^.]+$/, ''), archivos, ajustes: completarAjustes() };
+  return { id, origen: 'tuyo', nombre: principal.nombre.replace(/\.[^.]+$/, ''), archivos, ajustes: completarAjustes() };
 }
 
 // ───────────────────────── Leer el modelo ─────────────────────────
@@ -99,7 +148,8 @@ export function registroDesdeArchivos(id, lista) {
 export async function cargarModelo(registro) {
   const [principal, ...resto] = registro.archivos;
   const urls = new Map(); // nombre de archivo → URL temporal (blob:)
-  for (const a of registro.archivos) urls.set(a.nombre.toLowerCase(), URL.createObjectURL(a.blob));
+  // Los tuyos están guardados en el navegador (blob); los del proyecto, en el servidor (url)
+  for (const a of registro.archivos) urls.set(a.nombre.toLowerCase(), a.blob ? URL.createObjectURL(a.blob) : a.url);
   urls.set('draco_wasm_wrapper.js', dracoWrapper);
   urls.set('draco_decoder.wasm', dracoWasm);
   const faltan = new Set();
@@ -124,7 +174,7 @@ export async function cargarModelo(registro) {
       const obj = new OBJLoader(gestor);
       const mtl = resto.find((a) => extension(a.nombre) === 'mtl');
       // El .obj dice qué archivo de materiales usa ("mtllib"): si no lo elegiste, te avisamos
-      const pedido = (await principal.blob.text()).match(/^mtllib\s+(.+)$/m)?.[1]?.trim();
+      const pedido = (await (principal.blob ?? await (await fetch(principal.url)).blob()).text()).match(/^mtllib\s+(.+)$/m)?.[1]?.trim();
       if (pedido && !mtl) faltan.add(nombreBase(pedido));
       if (mtl) {
         const materiales = await new MTLLoader(gestor).loadAsync(urls.get(mtl.nombre.toLowerCase()));

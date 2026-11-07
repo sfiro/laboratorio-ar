@@ -161,3 +161,5 @@ body.en-ar { overflow: hidden; }
 .subcaja { display: grid; gap: 12px; padding: 10px; border-left: 3px solid #ffd166; background: #ffffff08; border-radius: 0 10px 10px 0; }
 .ajustes, .ajustes label, .subcaja { min-width: 0; }
 .ajustes select { width: 100%; min-width: 0; text-overflow: ellipsis; }
+.tarjeta-objeto.proyecto { border-color: #4f8cff; }
+.tarjeta-objeto.proyecto .tipo { background: #4f8cff; color: #fff; }

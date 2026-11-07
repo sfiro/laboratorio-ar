@@ -54,7 +54,11 @@ Pon **tus propios modelos** sobre los marcadores, desde el celular y sin tocar c
 | `.stl` / `.ply` | Típicos de impresión 3D. Suelen venir con Z hacia arriba: marca **«Sale acostado»**. |
 | `.fbx` | Funciona, pero conviene pasarlo a `.glb` con Blender. |
 
-- **Se guarda solo en ese celular** (IndexedDB del navegador). No se sube a ningún servidor; en otro celular hay que elegirlos de nuevo.
+- Cada objeto puede ser:
+  - **Solo aquí**: guardado en ese navegador (IndexedDB). No se sube a ningún lado.
+  - **Del proyecto**: está en `public/objetos/` y se publica con la página, así que **sale en cualquier celular en lugar del genérico**. Con `npm run dev`, en la computadora, el botón **«💾 Guardar en el proyecto (para todos)»** copia tus archivos y ajustes ahí. Después hay que publicar (commit y push).
+  - Si cambias en el celular los ajustes de un objeto del proyecto, ese cambio queda «solo aquí», y **«↩︎ Volver al del proyecto»** lo deshace.
+- El selector de archivos no filtra por tipo: los celulares no conocen tipos como `.stl` o `.glb` y no dejarían elegirlos. El formato se revisa después de elegir.
 - Cada modelo se **normaliza**: se centra, se apoya en el papel y su lado más grande mide 0.8 del marcador. Así da igual si lo hiciste en milímetros o en metros.
 - Si el modelo trae **animaciones**, se elige cuál se reproduce. Si no, puede girar, flotar o quedarse quieto.
 - **Orientación**:

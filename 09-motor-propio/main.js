@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { MotorPropio } from './motor.js';
 import { DetectorDeMarcadores } from './marcadores.js';
 import { contenidoMarcador, contenidoImagen } from './contenido.js';
-import { leerObjetos, cargarModelo, montar, ambienteDeHabitacion } from './mis-objetos.js';
+import { leerTodos, cargarModelo, montar, ambienteDeHabitacion } from './mis-objetos.js';
 import { prepararMisObjetos } from './editor-objetos.js';
 
 const $ = (id) => document.getElementById(id);
@@ -31,7 +31,7 @@ async function empezar(nuevoModo) {
     const propios = new Map(), fallos = []; // id de marcador → tu objeto (de «Mis objetos 3D»)
     if (modo === 'marcadores') {
       detector = new DetectorDeMarcadores();
-      const registros = await leerObjetos().catch(() => []);
+      const registros = [...(await leerTodos()).values()];
       for (const r of registros) {
         estado(`Cargando tus objetos… (${r.nombre})`);
         try { propios.set(r.id, { ...montar(await cargarModelo(r), r.ajustes), nombre: r.nombre }); } catch (e) { console.error(e); fallos.push(r.nombre); }
