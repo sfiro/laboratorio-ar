@@ -12,10 +12,21 @@
       "giro": 0,
       "inclinarX": 0,
       "inclinarZ": 0,
-      "animacion": "auto",
+      "animacion": "respirar",
       "clip": 0,
       "eje": "vertical",
-      "velocidad": 0.6
+      "velocidad": 0.6,
+      "ritmo": 1,
+      "deformar": "saludar",
+      "punto": [
+        -0.28,
+        0.723,
+        0.122
+      ],
+      "radio": 0.13,
+      "fuerza": 30,
+      "ejeDeformar": "frente",
+      "ritmoDeformar": 1
     }
   }
 ]

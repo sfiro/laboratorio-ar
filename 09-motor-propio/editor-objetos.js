@@ -7,6 +7,7 @@ import {
   cargarModelo, montar, ambienteDeHabitacion, pedirGuardadoPermanente,
 } from './mis-objetos.js';
 import { NOMBRES_DE_FABRICA } from './contenido.js';
+import { MOVIMIENTOS, DEFORMACIONES, EJES_DEFORMAR } from './animaciones.js';
 
 const $ = (id) => document.getElementById(id);
 const CANTIDAD = 8;
@@ -68,6 +69,7 @@ function cerrarEditor() {
 
 async function mostrarActual() {
   quitarDeVista();
+  elegirZona(false);
   const r = actual.registro;
   $('ajustes').hidden = !r;
   const tuyo = r?.origen === 'tuyo';
@@ -123,7 +125,8 @@ function quitarDeVista() {
 }
 
 // Los controles: tamaño, altura, qué lado va arriba, giro, inclinaciones y movimiento
-const DESLIZADORES = ['ajTamano', 'ajAltura', 'ajGiro', 'ajInclinarX', 'ajInclinarZ', 'ajVelocidad'];
+const DESLIZADORES = { ajTamano: 'tamano', ajAltura: 'altura', ajGiro: 'giro', ajInclinarX: 'inclinarX', ajInclinarZ: 'inclinarZ',
+  ajVelocidad: 'velocidad', ajRitmo: 'ritmo', ajRadio: 'radio', ajFuerza: 'fuerza', ajRitmoDeformar: 'ritmoDeformar' };
 const opcion = (sel, valor, texto) => sel.append(Object.assign(document.createElement('option'), { value: valor, textContent: texto }));
 
 function llenarAjustes(ajustes, clips) {
@@ -131,11 +134,13 @@ function llenarAjustes(ajustes, clips) {
   $('ajTamano').value = a.tamano; $('ajAltura').value = a.altura; $('ajGiro').value = a.giro;
   $('ajInclinarX').value = a.inclinarX; $('ajInclinarZ').value = a.inclinarZ; $('ajVelocidad').value = a.velocidad;
   $('ajArriba').value = a.arriba; $('ajEje').value = a.eje;
+  $('ajRitmo').value = a.ritmo; $('ajRadio').value = a.radio; $('ajFuerza').value = a.fuerza; $('ajRitmoDeformar').value = a.ritmoDeformar;
+  $('ajDeformar').value = a.deformar; $('ajEjeDeformar').value = a.ejeDeformar;
   const sel = $('ajAnimacion');
   sel.innerHTML = '';
   opcion(sel, 'auto', clips.length ? 'Automática (la del modelo)' : 'Automática (girar)');
   clips.forEach((c, i) => opcion(sel, `clip:${i}`, `Del modelo: ${c.name || `animación ${i + 1}`}`));
-  opcion(sel, 'girar', 'Girar'); opcion(sel, 'flotar', 'Flotar'); opcion(sel, 'ninguna', 'Quieto');
+  for (const [valor, texto] of Object.entries(MOVIMIENTOS)) opcion(sel, valor, texto);
   sel.value = a.animacion === 'clip' ? `clip:${a.clip}` : a.animacion;
   if (!sel.value) sel.value = 'auto';
   actual.tieneClips = clips.length > 0;
@@ -148,7 +153,9 @@ function leerAjustes() {
     tamano: +$('ajTamano').value, altura: +$('ajAltura').value, arriba: $('ajArriba').value,
     giro: +$('ajGiro').value, inclinarX: +$('ajInclinarX').value, inclinarZ: +$('ajInclinarZ').value,
     animacion: anim.startsWith('clip:') ? 'clip' : anim, clip: anim.startsWith('clip:') ? +anim.slice(5) : 0,
-    eje: $('ajEje').value, velocidad: +$('ajVelocidad').value,
+    eje: $('ajEje').value, velocidad: +$('ajVelocidad').value, ritmo: +$('ajRitmo').value,
+    deformar: $('ajDeformar').value, radio: +$('ajRadio').value, fuerza: +$('ajFuerza').value,
+    ejeDeformar: $('ajEjeDeformar').value, ritmoDeformar: +$('ajRitmoDeformar').value,
   };
 }
 
@@ -161,13 +168,24 @@ function mostrarValores() {
   // El eje y la velocidad solo importan si el objeto gira
   const anim = $('ajAnimacion').value;
   $('cajaGiro').hidden = !(anim === 'girar' || (anim === 'auto' && !actual?.tieneClips));
+  $('filaRitmo').hidden = !['flotar', 'respirar', 'saltar', 'balancear'].includes(anim);
+  $('vRitmo').textContent = `${(+$('ajRitmo').value).toFixed(1)}×`;
+  // Mover una parte
+  const def = $('ajDeformar').value, saluda = def === 'saludar';
+  $('cajaDeformar').hidden = def === 'ninguna';
+  for (const id of ['filaZona', 'filaRadio', 'filaEjeDeformar']) $(id).hidden = !saluda;
+  $('vRadio').textContent = (+$('ajRadio').value).toFixed(2);
+  $('vFuerza').textContent = saluda ? `${$('ajFuerza').value}°` : `${$('ajFuerza').value}`;
+  $('vRitmoDeformar').textContent = `${(+$('ajRitmoDeformar').value).toFixed(1)}×`;
+  actual?.montado?.resaltarZona(saluda);
 }
 
 let guardando = null;
 function alCambiarAjuste() {
   if (!actual?.registro) return;
   mostrarValores();
-  actual.registro.ajustes = leerAjustes();
+  // "punto" (la parte que tocaste) no tiene control propio: se conserva
+  actual.registro.ajustes = { ...actual.registro.ajustes, ...leerAjustes() };
   actual.montado?.aplicar(actual.registro.ajustes);
   // Guardamos un momento después de que dejes de mover el control
   clearTimeout(guardando);
@@ -210,6 +228,31 @@ async function alElegirArchivos(lista) {
   }
 }
 
+// ───────────────────────── Tocar la parte que se mueve ─────────────────────────
+let eligiendo = false;
+function elegirZona(v) {
+  eligiendo = v;
+  $('btnElegirZona').classList.toggle('eligiendo', v);
+  $('btnElegirZona').textContent = v ? '✋ Ahora toca el modelo…' : '👆 Tocar la parte que se mueve';
+  $('vistaPrevia').classList.toggle('eligiendo', v);
+  if (v) $('vistaPrevia').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+/** Un toque (no un arrastre) sobre la vista previa: buscamos qué punto del modelo tocaste */
+function alTocarVista(x, y) {
+  if (!eligiendo || !actual?.montado) return;
+  const caja = vista.renderer.domElement.getBoundingClientRect();
+  const ndc = new THREE.Vector2(((x - caja.left) / caja.width) * 2 - 1, -((y - caja.top) / caja.height) * 2 + 1);
+  const rayo = new THREE.Raycaster();
+  rayo.setFromCamera(ndc, vista.camara);
+  const golpe = rayo.intersectObject(actual.montado.objeto, true).find((g) => g.object.isMesh);
+  if (!golpe) return aviso('No tocaste el modelo. Intenta otra vez.', true);
+  aviso('');
+  actual.registro.ajustes = { ...actual.registro.ajustes, punto: actual.montado.aCoordenadasModelo(golpe.point) };
+  elegirZona(false);
+  alCambiarAjuste();
+}
+
 // ───────────────────────── Vista previa 3D ─────────────────────────
 // Se ve el marcador en el piso y el objeto encima, tal como saldrá en la cámara.
 function crearVista() {
@@ -223,6 +266,13 @@ function crearVista() {
   const controles = new OrbitControls(camara, lienzo);
   controles.target.set(0, 0.3, 0);
   controles.enableDamping = true;
+  // Distinguir un toque de un arrastre (el arrastre gira la vista)
+  let inicio = null;
+  lienzo.addEventListener('pointerdown', (e) => { inicio = [e.clientX, e.clientY]; });
+  lienzo.addEventListener('pointerup', (e) => {
+    if (inicio && Math.hypot(e.clientX - inicio[0], e.clientY - inicio[1]) < 8) alTocarVista(e.clientX, e.clientY);
+    inicio = null;
+  });
   ambienteDeHabitacion(renderer).then((t) => { escena.environment = t; escena.environmentIntensity = 0.6; });
   const sol = new THREE.DirectionalLight('#fff', 2.2);
   sol.position.set(0.3, 1, 1);
@@ -273,10 +323,12 @@ export function prepararMisObjetos({ alProbar }) {
   $('archivoModelo').addEventListener('change', (e) => { alElegirArchivos(e.target.files); e.target.value = ''; });
   for (const [valor, { texto }] of Object.entries(LADOS_ARRIBA)) opcion($('ajArriba'), valor, texto);
   for (const [valor, { texto }] of Object.entries(EJES_GIRO)) opcion($('ajEje'), valor, texto);
-  for (const id of [...DESLIZADORES, 'ajArriba', 'ajAnimacion', 'ajEje']) $(id).addEventListener('input', alCambiarAjuste);
+  for (const [valor, texto] of Object.entries(DEFORMACIONES)) opcion($('ajDeformar'), valor, texto);
+  for (const [valor, { texto }] of Object.entries(EJES_DEFORMAR)) opcion($('ajEjeDeformar'), valor, texto);
+  for (const id of [...Object.keys(DESLIZADORES), 'ajArriba', 'ajAnimacion', 'ajEje', 'ajDeformar', 'ajEjeDeformar']) $(id).addEventListener('input', alCambiarAjuste);
+  $('btnElegirZona').addEventListener('click', () => elegirZona(!eligiendo));
   // Tocar dos veces un deslizador lo devuelve a su valor inicial
-  for (const id of DESLIZADORES) $(id).addEventListener('dblclick', (e) => {
-    const clave = { ajTamano: 'tamano', ajAltura: 'altura', ajGiro: 'giro', ajInclinarX: 'inclinarX', ajInclinarZ: 'inclinarZ', ajVelocidad: 'velocidad' }[id];
+  for (const [id, clave] of Object.entries(DESLIZADORES)) $(id).addEventListener('dblclick', (e) => {
     e.target.value = AJUSTES_INICIALES[clave];
     alCambiarAjuste();
   });

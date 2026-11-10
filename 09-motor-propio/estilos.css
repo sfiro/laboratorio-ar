@@ -163,3 +163,7 @@ body.en-ar { overflow: hidden; }
 .ajustes select { width: 100%; min-width: 0; text-overflow: ellipsis; }
 .tarjeta-objeto.proyecto { border-color: #4f8cff; }
 .tarjeta-objeto.proyecto .tipo { background: #4f8cff; color: #fff; }
+.fila-zona { display: grid; gap: 6px; }
+.fila-zona .btn { justify-self: start; }
+.btn.eligiendo { background: #ffd166; color: #0b0d12; }
+.vista-previa.eligiendo { outline: 3px solid #ffd166; cursor: crosshair; }

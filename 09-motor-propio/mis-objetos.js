@@ -13,6 +13,7 @@ import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader.js';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 import { PLYLoader } from 'three/examples/jsm/loaders/PLYLoader.js';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
+import { moverCuerpo, prepararDeformacion } from './animaciones.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import dracoWrapper from 'three/examples/jsm/libs/draco/gltf/draco_wasm_wrapper.js?url';
 import dracoWasm from 'three/examples/jsm/libs/draco/gltf/draco_decoder.wasm?url';
@@ -24,6 +25,9 @@ export const AJUSTES_INICIALES = {
   giro: 0, inclinarX: 0, inclinarZ: 0, // orientación fija, en grados
   animacion: 'auto', clip: 0,
   eje: 'vertical', velocidad: 0.6,    // giro animado: sobre qué eje y cuántos radianes por segundo
+  ritmo: 1,                           // rapidez de respirar, saltar, balancearse y flotar
+  // Deformación (mover una parte del modelo): ver animaciones.js
+  deformar: 'ninguna', punto: null, radio: 0.15, fuerza: 35, ejeDeformar: 'frente', ritmoDeformar: 1,
 };
 
 /** Cómo girar el modelo para que ese eje suyo quede hacia arriba */
@@ -237,6 +241,9 @@ export function montar({ modelo, clips }, ajustesIniciales) {
   const caja = new THREE.Box3(), tam = new THREE.Vector3(), centro = new THREE.Vector3();
   let mezclador = null, accion = null, ajustes = null, arribaAntes = null, mitad = 0.4;
   if (clips.length) mezclador = new THREE.AnimationMixer(modelo);
+  // Los vértices se deforman en las coordenadas de "bajar": ahí el modelo está de pie,
+  // centrado y apoyado en Y = 0, con su lado más grande de 0.8
+  const deformacion = prepararDeformacion(modelo, bajar);
 
   function normalizar() {
     centrar.position.set(0, 0, 0); centrar.scale.setScalar(1);
@@ -256,7 +263,10 @@ export function montar({ modelo, clips }, ajustesIniciales) {
     mitad = (tam.y * base) / 2;
     pivote.position.y = mitad;
     bajar.position.y = -mitad;
+    anchoMitad = (tam.x * base) / 2;
+    deformacion.recalcular(mitad * 2);
   }
+  let anchoMitad = 0.3;
 
   const rad = THREE.MathUtils.degToRad;
   function aplicar(nuevos) {
@@ -281,11 +291,12 @@ export function montar({ modelo, clips }, ajustesIniciales) {
   const ejePropio = new THREE.Vector3();
   function animar(t, dt = 1 / 60) {
     mezclador?.update(dt);
-    const gira = ajustes.animacion === 'girar' || (ajustes.animacion === 'auto' && !clips.length);
+    const a = ajustes;
+    const gira = a.animacion === 'girar' || (a.animacion === 'auto' && !clips.length);
     if (gira) {
       // El eje "propio" es la vertical del modelo ya inclinado
-      const eje = EJES_GIRO[ajustes.eje]?.eje ?? ejePropio.set(0, 1, 0).applyQuaternion(orientar.quaternion);
-      pivote.quaternion.setFromAxisAngle(eje, t * ajustes.velocidad);
+      const eje = EJES_GIRO[a.eje]?.eje ?? ejePropio.set(0, 1, 0).applyQuaternion(orientar.quaternion);
+      pivote.quaternion.setFromAxisAngle(eje, t * a.velocidad);
       // La flecha atraviesa el modelo por el centro, a lo largo del eje
       const largo = mitad * 2 + 0.3;
       flecha.setDirection(eje);
@@ -295,18 +306,28 @@ export function montar({ modelo, clips }, ajustesIniciales) {
       pivote.quaternion.identity();
     }
     flecha.visible = verEje && gira;
-    raiz.position.y = ajustes.altura + (ajustes.animacion === 'flotar' ? 0.05 + Math.sin(t * 2) * 0.05 : 0);
+    // Movimientos del cuerpo entero (respirar, saltar…) y deformaciones (saludar, gelatina)
+    const sube = moverCuerpo(gira ? 'ninguna' : a.animacion, t, a.ritmo, { raiz, bajar });
+    raiz.position.y = a.altura + sube;
+    deformacion.actualizar(a.deformar === 'saludar' && !a.punto ? { ...a, punto: puntoPorDefecto() } : a, t);
   }
+  /** Si aún no tocaste la pata: arriba a la derecha del modelo */
+  const puntoPorDefecto = () => [anchoMitad * 0.7, mitad * 2 * 0.8, 0];
+  /** Un punto del mundo (por ejemplo, donde tocaste) en las coordenadas del modelo normalizado */
+  const aCoordenadasModelo = (p) => bajar.worldToLocal(p.clone()).toArray().map((v) => Math.round(v * 1000) / 1000);
   /** Qué tan alto queda (en unidades del marcador), para poner la etiqueta encima */
   function alto() {
     raiz.updateWorldMatrix(true, true);
     const b = new THREE.Box3().setFromObject(raiz, true);
     if (raiz.parent) b.applyMatrix4(new THREE.Matrix4().copy(raiz.parent.matrixWorld).invert());
     // Si gira sobre un eje horizontal, puede subir hasta su diagonal
-    const giraAcostado = ajustes.eje !== 'vertical' && ajustes.animacion !== 'ninguna';
+    const giraAcostado = ajustes.eje !== 'vertical' && (ajustes.animacion === 'girar' || (ajustes.animacion === 'auto' && !clips.length));
     return b.isEmpty() ? 0.5 : Math.max(b.max.y, giraAcostado ? ajustes.altura + mitad * 2.2 * ajustes.tamano : 0);
   }
-  return { objeto: raiz, aplicar, animar, alto, mostrarEje: (v) => { verEje = v; } };
+  return {
+    objeto: raiz, aplicar, animar, alto, aCoordenadasModelo, mostrarEje: (v) => { verEje = v; },
+    resaltarZona: (v) => deformacion.resaltar(v),
+  };
 }
 
 /** Luz de ambiente "de habitación" para que los materiales metálicos (PBR) no se vean negros */

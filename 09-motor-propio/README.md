@@ -68,6 +68,17 @@ Pon **tus propios modelos** sobre los marcadores, desde el celular y sin tocar c
 - Para que vaya fluido en el celular: menos de **100 000 triángulos** y texturas de 2048 px como máximo. Con más de 300 000 te avisa.
 - Modelos de prueba en `pruebas/modelos/`: un `.glb` animado, una torre `.stl` con Z arriba y un dado `.obj` + `.mtl`.
 
+### Animar tus objetos (`animaciones.js`)
+Funciona aunque el modelo no traiga animaciones, como un `.stl`:
+
+- **Movimiento** (todo el cuerpo): girar, flotar, **respirar**, **saltar** (se agacha, salta y se aplasta al caer) y **balancearse**. Con **Ritmo** cambias la rapidez.
+- **Mover una parte**: cambia la posición de los **vértices** en la tarjeta gráfica (un *shader*), así que una parte se mueve distinto del resto aunque el modelo sea una sola pieza.
+  - **Saludar**: toca **«👆 Tocar la parte que se mueve»** y luego la pata en la vista previa. Esa zona se pinta de amarillo (solo en la vista previa) y se dobla alrededor de su "hombro". Ajusta el tamaño de la zona, la dirección, la fuerza y el ritmo.
+  - **Gelatina**: el modelo se tambalea más cuanto más arriba, como un flan.
+- La deformación se agrega a los **materiales que ya trae el modelo** (`onBeforeCompile`): conserva sus colores, texturas y luces.
+
+Las skills de Three.js (`.claude/skills/`, de [CloudAI-X/threejs-skills](https://github.com/cloudai-x/threejs-skills), licencia MIT) guiaron esta parte: `threejs-animation` (reloj, mezclador de animaciones) y `threejs-shaders` (extender materiales). Para animar con **esqueleto** (pata, cola y cabeza por separado), haz el modelo en **Blender**, expórtalo a `.glb` con sus animaciones y elígelas en «Movimiento».
+
 **¿Dónde consigo modelos?** Hazlos con **Blender** (libre) y exporta a glTF Binary (`.glb`). O descárgalos con licencia libre (CC0 o CC-BY) de Poly Haven, Kenney o Sketchfab (filtro «Downloadable»), dando el crédito que pida la licencia.
 
 ## Parte 2 · Imagen: ORB y flujo óptico (`imagenes.js`)

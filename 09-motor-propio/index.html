@@ -75,6 +75,18 @@
             <small>La flecha amarilla de la vista previa muestra el eje.</small></label>
           <label>Velocidad <b id="vVelocidad"></b><input id="ajVelocidad" type="range" min="-3" max="3" step="0.1" /></label>
         </div>
+        <label id="filaRitmo">Ritmo <b id="vRitmo"></b><input id="ajRitmo" type="range" min="0.2" max="3" step="0.1" /></label>
+        <label>Mover una parte <select id="ajDeformar"></select></label>
+        <div id="cajaDeformar" class="subcaja">
+          <div id="filaZona" class="fila-zona">
+            <button id="btnElegirZona" type="button" class="btn btn-sec">👆 Tocar la parte que se mueve</button>
+            <small id="ayudaZona">La zona amarilla es la que se mueve. Toca la pata (o la parte que quieras) en la vista previa.</small>
+          </div>
+          <label id="filaRadio">Tamaño de la zona <b id="vRadio"></b><input id="ajRadio" type="range" min="0.04" max="0.45" step="0.01" /></label>
+          <label id="filaEjeDeformar">Dirección <select id="ajEjeDeformar"></select></label>
+          <label>Fuerza <b id="vFuerza"></b><input id="ajFuerza" type="range" min="5" max="90" step="1" /></label>
+          <label>Ritmo <b id="vRitmoDeformar"></b><input id="ajRitmoDeformar" type="range" min="0.2" max="3" step="0.1" /></label>
+        </div>
         <p class="nota">Toca dos veces un deslizador para devolverlo a su valor inicial.</p>
         <div class="acciones-editor">
           <button id="btnReiniciar" class="btn btn-sec">↺ Ajustes iniciales</button>
